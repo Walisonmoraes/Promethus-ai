@@ -18,6 +18,7 @@ import {
   RadialBar,
 } from "recharts";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
+import { ModoBabiloniaView } from "@/features/modo-babilonia/ModoBabiloniaView";
 
 type Message = {
   id: string;
@@ -2756,7 +2757,7 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
 
       {modal ? (
         <div
-          className="modal-overlay"
+          className={`modal-overlay ${modal.type === "modo-babilonia" ? "babilonia-overlay" : ""}`}
           onClick={() => {
             setModal(null);
             setBabiloniaMax(false);
@@ -2801,11 +2802,9 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
                     </button>
                   </div>
                 </div>
-                <iframe
-                  src="/modo-babilonia"
-                  title="Modo Babilonia"
-                  className="babilonia-frame"
-                />
+                <div className="babilonia-inline-scroll">
+                  <ModoBabiloniaView embedded />
+                </div>
               </>
             ) : null}
 
