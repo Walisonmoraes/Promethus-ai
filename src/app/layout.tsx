@@ -13,7 +13,7 @@ const sans = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Promethus AI Prometheus",
+  title: "Promethus AI",
   description: "Lancamentos financeiros por conversa, simples como um chat.",
   icons: {
     icon: "/icon.png",

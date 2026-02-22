@@ -25,7 +25,7 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         model: "llama3",
         prompt:
-          "Voce e Promethus AI Prometheus, um assistente financeiro claro e confiavel. " +
+          "Voce e Promethus AI, um assistente financeiro claro e confiavel. " +
           "Classifique o texto em uma unica categoria desta lista: " +
           CATEGORIES.join(", ") +
           ". Responda apenas com o nome da categoria. Texto: " +

@@ -76,7 +76,7 @@ const GOAL_CATEGORIES = [
   "Outros",
 ];
 
-type ModalType = "agenda" | "meta" | "historico" | "edit-agenda" | "edit-meta" | "edit-historico";
+type ModalType = "agenda" | "meta" | "historico" | "edit-agenda" | "edit-meta" | "edit-historico" | "modo-babilonia";
 
 type ChipId = "resumo" | "categorias";
 
@@ -86,7 +86,8 @@ type NavId =
   | "metas"
   | "cartoes"
   | "relatorios"
-  | "categorias";
+  | "categorias"
+  | "modo-babilonia";
 
 type NavItem = {
   id: NavId;
@@ -845,8 +846,7 @@ function renderFormatted(text: string) {
   );
 }
 
-export default function Home() {
-  const [messages, setMessages] = useState<Message[]>([]);
+export default function Home() {  const [messages, setMessages] = useState<Message[]>([]);
   const [hasRotatedIntro, setHasRotatedIntro] = useState(false);
   const [shortcutSet, setShortcutSet] = useState(() => CHAT_SHORTCUT_POOL[0]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -889,6 +889,7 @@ export default function Home() {
     kind: "expense" as "expense" | "income",
   });
   const [modal, setModal] = useState<null | { type: ModalType; id?: string }>(null);
+  const [babiloniaMax, setBabiloniaMax] = useState(false);
   const chatWindowRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -1305,13 +1306,13 @@ export default function Home() {
         body: JSON.stringify({ prompt: contextualPrompt }),
       });
       if (!response.ok) {
-        pushMessage("assistant", "Promethus AI Prometheus esta indisponivel no momento.");
+        pushMessage("assistant", "Promethus AI esta indisponivel no momento.");
         return;
       }
       const data = await response.json();
       pushMessage("assistant", data.text || "Ainda nao consegui responder com clareza.");
     } catch {
-      pushMessage("assistant", "Promethus AI Prometheus esta indisponivel no momento.");
+      pushMessage("assistant", "Promethus AI esta indisponivel no momento.");
     } finally {
       setIsTyping(false);
     }
@@ -1578,6 +1579,12 @@ export default function Home() {
 
   function handleNavClick(id: NavId) {
     setActiveNav(id);
+    if (id === "modo-babilonia") {
+      setBabiloniaMax(false);
+      setModal({ type: "modo-babilonia" });
+      return;
+    }
+
     if (typeof window === "undefined") return;
     const target = document.getElementById(`section-${id}`);
     if (target) {
@@ -1590,10 +1597,10 @@ export default function Home() {
       <header className="header">
         <div className="brand">
           <div className="brand-mark brand-image" aria-hidden="true">
-            <img src="/logo.png" alt="Promethus AI Prometheus logo" />
+            <img src="/logo.png" alt="Promethus AI logo" />
           </div>
           <div>
-            <h1>Promethus AI Prometheus</h1>
+            <h1>Promethus AI</h1>
             <p>Seu copiloto para lancamentos financeiros com o poder da IA.</p>
           </div>
         </div>
@@ -1624,6 +1631,37 @@ export default function Home() {
       <div className="content">
         <section className="layout">
         <aside className="summary">
+          <button
+            type="button"
+            className={`card babilonia-menu-card ${activeNav === "modo-babilonia" ? "babilonia-menu-card-active" : ""}`}
+            onClick={() => handleNavClick("modo-babilonia")}
+          >
+            <small>Modulo estrategico</small>
+            <strong className="babilonia-title-row">
+              <span className="babilonia-title-icon" aria-hidden="true">
+                <svg
+                  viewBox="0 0 24 24"
+                  focusable="false"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  width="18"
+                  height="18"
+                >
+                  <path d="M4 18h16" />
+                  <path d="M7 18V12" />
+                  <path d="M12 18V9" />
+                  <path d="M17 18V6" />
+                  <path d="M6.5 9.8 10.5 7l3 2.2L18 5.6" />
+                </svg>
+              </span>
+              <span className="babilonia-title-text">Modo Babilonia</span>
+            </strong>
+            <span className="babilonia-subtext">7 principios financeiros</span>
+          </button>
+
           <div className="card menu-card">
             <h2>Menu rapido</h2>
             <div className="nav-list">
@@ -2717,8 +2755,60 @@ export default function Home() {
       ) : null}
 
       {modal ? (
-        <div className="modal-overlay" onClick={() => setModal(null)}>
-          <div className="modal" onClick={(event) => event.stopPropagation()}>
+        <div
+          className="modal-overlay"
+          onClick={() => {
+            setModal(null);
+            setBabiloniaMax(false);
+          }}
+        >
+          <div
+            className={
+              modal.type === "modo-babilonia"
+                ? `modal babilonia-modal ${babiloniaMax ? "babilonia-maximized" : ""}`
+                : "modal"
+            }
+            onClick={(event) => event.stopPropagation()}
+          >
+            {modal.type === "modo-babilonia" ? (
+              <>
+                <div className="modal-titlebar">
+                  <div className="modal-title">
+                    <h3>Modo Babilonia</h3>
+                    <small>7 principios em formato pratico</small>
+                  </div>
+                  <div className="modal-controls">
+                    <button
+                      type="button"
+                      className="icon-btn icon-btn-sm"
+                      title={babiloniaMax ? "Restaurar" : "Maximizar"}
+                      aria-label={babiloniaMax ? "Restaurar" : "Maximizar"}
+                      onClick={() => setBabiloniaMax((prev) => !prev)}
+                    >
+                      {babiloniaMax ? "⤡" : "⤢"}
+                    </button>
+                    <button
+                      type="button"
+                      className="icon-btn icon-btn-sm icon-remove"
+                      title="Fechar"
+                      aria-label="Fechar"
+                      onClick={() => {
+                        setModal(null);
+                        setBabiloniaMax(false);
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+                <iframe
+                  src="/modo-babilonia"
+                  title="Modo Babilonia"
+                  className="babilonia-frame"
+                />
+              </>
+            ) : null}
+
             {modal.type === "agenda" ? (
               <>
                 <h3>Nova agenda</h3>
