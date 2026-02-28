@@ -14,9 +14,18 @@ export function Step6Future() {
   );
 
   const yearsToGoal = Math.max(0, state.targetAge - state.currentAge);
+  const sealIcon = (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M3 12a9 9 0 1 0 9-9M12 7v5l3 2" />
+    </svg>
+  );
 
   return (
-    <SectionCard title="6. Futuro Financeiro" description="Projete o patrimonio necessario para sustentar a renda futura desejada.">
+    <SectionCard
+      title="6. Futuro Financeiro"
+      description="Projete o patrimonio necessario para sustentar a renda futura desejada."
+      seal={{ icon: sealIcon, label: "Horizonte" }}
+    >
       <div className="mb-row-3">
         <label className="mb-field">
           <span>Idade atual</span>

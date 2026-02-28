@@ -16,9 +16,18 @@ export function Step3MoneyWorking() {
   );
 
   const finalValue = series[series.length - 1]?.total ?? 0;
+  const sealIcon = (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M4 18h16M6 16l4-4 3 3 5-6" />
+    </svg>
+  );
 
   return (
-    <SectionCard title="3. Dinheiro Trabalhando" description="Simule juros compostos para visualizar crescimento patrimonial.">
+    <SectionCard
+      title="3. Dinheiro Trabalhando"
+      description="Simule juros compostos para visualizar crescimento patrimonial."
+      seal={{ icon: sealIcon, label: "Juros Compostos" }}
+    >
       <div className="mb-row-3">
         <label className="mb-field">
           <span>Valor investido</span>

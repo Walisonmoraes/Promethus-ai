@@ -30,6 +30,41 @@ const STEP_ANCHORS = [
   "#mb-step-7-aumento-de-renda",
 ];
 
+function IconSeal() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M4 20h16M6 20V9l6-4 6 4v11M9 13h6M9 16h6" />
+    </svg>
+  );
+}
+
+function IconMissionTablet() {
+  return (
+    <svg className="shortcut-icon mb-shortcut-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <rect x="6.5" y="4" width="11" height="16" rx="2" />
+      <path d="M9.2 9h5.6M9.2 13h5.6" />
+    </svg>
+  );
+}
+
+function IconXpIshtar() {
+  return (
+    <svg className="shortcut-icon mb-shortcut-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="m12 4.4 2.2 4.4 4.8.7-3.5 3.4.8 4.8-4.3-2.2-4.3 2.2.8-4.8-3.5-3.4 4.8-.7z" />
+    </svg>
+  );
+}
+
+function IconConquestLaurel() {
+  return (
+    <svg className="shortcut-icon mb-shortcut-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle cx="12" cy="9" r="3" />
+      <path d="M12 12.2V16M10 18h4" />
+      <path d="M8.2 14.5c-.8-.4-1.5-.9-2-1.6M15.8 14.5c.8-.4 1.5-.9 2-1.6" />
+    </svg>
+  );
+}
+
 function BabiloniaDashboard({ embedded = false }: { embedded?: boolean }) {
   const { state } = useBabilonia();
 
@@ -75,28 +110,50 @@ function BabiloniaDashboard({ embedded = false }: { embedded?: boolean }) {
     <main className={`mb-page ${embedded ? "mb-page-embedded" : ""}`}>
       <div className={`mb-shell ${embedded ? "mb-shell-embedded" : ""}`}>
         <header className="mb-hero">
-          <p className="mb-kicker">Modo Babilonia</p>
+          <div className="mb-kicker-row">
+            <p className="mb-kicker">Modo Babilonia</p>
+            <span className="mb-seal">
+              <IconSeal />
+              Selo de Arkad
+            </span>
+          </div>
           <h1 className="mb-title">Os 7 passos de Arkad</h1>
           <p className="mb-subtitle">
             Um passo a passo inspirado em &quot;O Homem Mais Rico da Babilonia&quot;: aplique cada principio no seu ritmo, com orientacao pratica.
           </p>
+          <div className="mb-hero-art" aria-hidden="true">
+            <svg viewBox="0 0 240 120" focusable="false">
+              <path d="M20 108h200M42 108V92h156v16M58 92V76h124v16M74 76V60h92v16M92 60V44h56v16" />
+              <path d="M26 108V34M214 108V34M18 34h16M206 34h16M12 28h28M200 28h28" />
+              <circle cx="120" cy="24" r="10" />
+            </svg>
+          </div>
         </header>
 
         <section className="mb-game-strip" aria-label="Painel gamificado">
           <article className="mb-game-card">
-            <p className="mb-label">Missoes concluidas</p>
+            <p className="mb-label mb-label-icon">
+              <IconMissionTablet />
+              Missoes concluidas
+            </p>
             <strong>{completedStages}/7</strong>
             <span>{activeStages} em progresso</span>
           </article>
 
           <article className="mb-game-card">
-            <p className="mb-label">XP Babilonia</p>
+            <p className="mb-label mb-label-icon">
+              <IconXpIshtar />
+              XP Babilonia
+            </p>
             <strong>{score}</strong>
             <span>Faltam {xpToNext} XP para o proximo nivel</span>
           </article>
 
           <article className="mb-game-card mb-game-card-badges">
-            <p className="mb-label">Conquistas</p>
+            <p className="mb-label mb-label-icon">
+              <IconConquestLaurel />
+              Conquistas
+            </p>
             <strong>{unlockedBadges}/3 desbloqueadas</strong>
             <div className="mb-badge-track">
               <span className={`mb-mini-badge ${savedPercent >= 100 ? "is-on" : ""}`}>Cofre</span>
@@ -118,10 +175,10 @@ function BabiloniaDashboard({ embedded = false }: { embedded?: boolean }) {
             </a>
           </article>
 
-          <article className="mb-guide-card">
+          <article className="mb-guide-card mb-guide-card-compass">
             <p className="mb-label">Bussola de Arkad</p>
             <h3>{spendingStatus}</h3>
-            <ul className="mb-plain-list">
+            <ul className="mb-plain-list mb-compass-list">
               <li><strong>Poupanca:</strong> {savedPercent.toFixed(0)}% do recomendado de 10%.</li>
               <li><strong>Reserva:</strong> {reserveMonths.toFixed(1)} meses de cobertura.</li>
               <li><strong>Investimentos:</strong> {hasInvestments ? "ativos" : "ainda nao iniciados"}.</li>

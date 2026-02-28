@@ -5,7 +5,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const prompt = body?.prompt?.trim();
     if (!prompt) {
-      return NextResponse.json({ text: "" }, { status: 400 });
+      return NextResponse.json({ error: "Prompt required" }, { status: 400 });
     }
 
     const response = await fetch("http://192.168.2.22:11434/api/generate", {
@@ -20,7 +20,7 @@ Seu papel e orientar o usuario a compreender melhor o dinheiro, ganhar autonomia
 
 Diretrizes de comunicacao:
 - Use linguagem humana, natural e acolhedora
-- Mantenha tom profissional, positivo e inspiridor
+- Mantenha tom profissional, positivo e inspirador
 - Seja direto e objetivo, sem respostas longas demais
 - Evite linguagem robotica ou excessivamente tecnica
 - Nao use parenteses
@@ -38,7 +38,7 @@ Estilo Promethus AI:
 Considere sempre a realidade financeira do usuario brasileiro.
 
 Usuario: ${prompt}`,
-        stream: false,
+        stream: true,
         options: {
           num_ctx: 2048,
           num_predict: 256,
@@ -48,12 +48,58 @@ Usuario: ${prompt}`,
     });
 
     if (!response.ok) {
-      return NextResponse.json({ text: "" }, { status: 500 });
+      return NextResponse.json({ error: "Failed to generate" }, { status: 500 });
     }
 
-    const data = await response.json();
-    return NextResponse.json({ text: data?.response ?? "" });
-  } catch {
-    return NextResponse.json({ text: "" }, { status: 500 });
+    const reader = response.body?.getReader();
+    if (!reader) {
+      return NextResponse.json({ error: "No response body" }, { status: 500 });
+    }
+
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = new TextDecoder().decode(value);
+            const lines = chunk.split('\n').filter(line => line.trim());
+
+            for (const line of lines) {
+              if (line.trim()) {
+                try {
+                  const parsed = JSON.parse(line);
+                  if (parsed.response) {
+                    controller.enqueue(encoder.encode(parsed.response));
+                  }
+                  if (parsed.done) {
+                    controller.close();
+                    return;
+                  }
+                } catch (e) {
+                  // Ignora erros de parsing
+                }
+              }
+            }
+          }
+        } catch (error) {
+          controller.error(error);
+        } finally {
+          reader.releaseLock();
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    });
+  } catch (error) {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

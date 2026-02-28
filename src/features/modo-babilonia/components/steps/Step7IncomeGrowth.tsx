@@ -10,9 +10,18 @@ export function Step7IncomeGrowth() {
     () => getIncomeGrowthPlan(state.skills, state.monthlyIncome, state.futureIncomeGoal),
     [state.futureIncomeGoal, state.monthlyIncome, state.skills]
   );
+  const sealIcon = (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M4 17l5-5 4 4 7-7M16 9h4v4" />
+    </svg>
+  );
 
   return (
-    <SectionCard title="7. Aumento de Renda" description="Defina habilidades e meta de renda para criar um plano evolutivo simples.">
+    <SectionCard
+      title="7. Aumento de Renda"
+      description="Defina habilidades e meta de renda para criar um plano evolutivo simples."
+      seal={{ icon: sealIcon, label: "Expansao" }}
+    >
       <div className="mb-row-2">
         <label className="mb-field">
           <span>Habilidades atuais (separe por virgula)</span>

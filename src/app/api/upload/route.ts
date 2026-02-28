@@ -2,12 +2,38 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const prompt = body?.prompt?.trim();
-    if (!prompt) {
-      return NextResponse.json({ text: "" }, { status: 400 });
+    const formData = await req.formData();
+    const files = formData.getAll('files') as File[];
+    const prompt = formData.get('prompt') as string;
+    
+    if (!files || files.length === 0) {
+      return NextResponse.json({ error: "No files provided" }, { status: 400 });
     }
 
+    // Process files - for now, just return file info
+    // In a real implementation, you might:
+    // - Extract text from PDFs
+    // - Analyze images with OCR
+    // - Store files temporarily
+    // - Send to vision-capable models
+    
+    const fileInfos = files.map(file => ({
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      isImage: file.type.startsWith('image/'),
+      isPDF: file.type === 'application/pdf'
+    }));
+
+    // Enhanced prompt with file context
+    const enhancedPrompt = `Analise os seguintes arquivos:
+${fileInfos.map((file, index) => 
+  `${index + 1}. ${file.name} (${file.type}, ${file.isImage ? 'Imagem' : file.isPDF ? 'PDF' : 'Documento'})`
+).join('\n')}
+
+${prompt ? `Pergunta do usuário: ${prompt}` : 'Por favor, analise estes arquivos e me diga o que encontrou.'}`;
+
+    // Call Ollama with enhanced prompt
     const response = await fetch("http://192.168.2.22:11434/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -20,7 +46,7 @@ Seu papel e orientar o usuario a compreender melhor o dinheiro, ganhar autonomia
 
 Diretrizes de comunicacao:
 - Use linguagem humana, natural e acolhedora
-- Mantenha tom profissional, positivo e inspiridor
+- Mantenha tom profissional, positivo e inspirador
 - Seja direto e objetivo, sem respostas longas demais
 - Evite linguagem robotica ou excessivamente tecnica
 - Nao use parenteses
@@ -37,7 +63,7 @@ Estilo Promethus AI:
 
 Considere sempre a realidade financeira do usuario brasileiro.
 
-Usuario: ${prompt}`,
+${enhancedPrompt}`,
         stream: false,
         options: {
           num_ctx: 2048,
@@ -48,12 +74,17 @@ Usuario: ${prompt}`,
     });
 
     if (!response.ok) {
-      return NextResponse.json({ text: "" }, { status: 500 });
+      return NextResponse.json({ error: "Failed to process files" }, { status: 500 });
     }
 
     const data = await response.json();
-    return NextResponse.json({ text: data?.response ?? "" });
-  } catch {
-    return NextResponse.json({ text: "" }, { status: 500 });
+    return NextResponse.json({ 
+      text: data?.response ?? "Não consegui processar os arquivos.",
+      files: fileInfos 
+    });
+
+  } catch (error) {
+    console.error("Upload error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

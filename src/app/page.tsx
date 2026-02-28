@@ -1,5 +1,6 @@
 "use client";
 
+import styles from "./page.module.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ResponsiveContainer,
@@ -23,11 +24,18 @@ import { ModoBabiloniaView } from "@/features/modo-babilonia/ModoBabiloniaView";
 type Message = {
   id: string;
   role: "user" | "assistant";
-  text: string;
+  text: string | { type: 'audio'; audioUrl: string; duration: number; waveform: number[] };
   timestamp: string;
   actions?: {
     label: string;
-    action: "save" | "save-goal" | "init-goal-deposit";
+    action:
+      | "save"
+      | "save-goal"
+      | "init-goal-deposit"
+      | "edit"
+      | "edit-goal"
+      | "cancel"
+      | "cancel-goal";
     expenseId?: string;
     goalId?: string;
   }[];
@@ -217,63 +225,27 @@ const CHAT_SHORTCUTS: Array<{
 const CHAT_SHORTCUT_POOL: Array<Array<typeof CHAT_SHORTCUTS[number]>> = [
   [
     {
-      label: "Orcamento do mes",
-      text: "me ajude a montar um orcamento mensal",
+      label: "Começar simples",
+      text: "gastei 50 no almoço hoje",
       icon: (
         <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
-          <path d="M4 19h16" />
-          <path d="M6 16v-4" />
-          <path d="M10 16v-8" />
-          <path d="M14 16v-6" />
-          <path d="M18 16v-10" />
+          <path d="M12 2v20" />
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H17" />
         </svg>
       ),
     },
     {
-      label: "Meta com plano",
-      text: "quero guardar 2000 em 6 meses",
+      label: "Receita salário",
+      text: "recebi 3500 de salario",
       icon: (
         <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
-          <circle cx="12" cy="12" r="9" />
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 3v2" />
+          <path d="M12 2v20" />
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H17" />
         </svg>
       ),
     },
     {
-      label: "Corte de gastos",
-      text: "me mostre onde posso cortar gastos",
-      icon: (
-        <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
-          <path d="M3 17l6-6 4 4 8-8" />
-          <path d="M21 8v8h-8" />
-        </svg>
-      ),
-    },
-    {
-      label: "Ultimos lancamentos",
-      text: "ultimos lancamentos",
-      icon: (
-        <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
-          <rect x="5" y="4" width="14" height="16" rx="3" />
-          <path d="M8 9h8" />
-          <path d="M8 13h8" />
-        </svg>
-      ),
-    },
-    {
-      label: "Analise de metas",
-      text: "me diga como esta o progresso das metas",
-      icon: (
-        <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
-          <path d="M4 12h6l2 3 3-6 5 9" />
-        </svg>
-      ),
-    },
-  ],
-  [
-    {
-      label: "Resumo do mes",
+      label: "Ver resumo",
       text: "resumo do mes",
       chipId: "resumo",
       icon: (
@@ -286,30 +258,19 @@ const CHAT_SHORTCUT_POOL: Array<Array<typeof CHAT_SHORTCUTS[number]>> = [
       ),
     },
     {
-      label: "Categorias inteligentes",
-      text: "paguei 180 no mercado",
-      chipId: "categorias",
+      label: "Criar meta",
+      text: "quero guardar 500 por mes",
       icon: (
         <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
-          <path d="M3 12l7-7h7l4 4v7l-7 7-11-11z" />
-          <path d="M16 8h.01" />
+          <circle cx="12" cy="12" r="9" />
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 3v2" />
         </svg>
       ),
     },
     {
-      label: "Fluxo do mes",
-      text: "me mostre o fluxo de entradas e saidas",
-      icon: (
-        <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
-          <path d="M4 7h16" />
-          <path d="M4 12h10" />
-          <path d="M4 17h16" />
-        </svg>
-      ),
-    },
-    {
-      label: "Dica rapida",
-      text: "me de uma dica rapida para economizar",
+      label: "Economizar",
+      text: "me de uma dica para economizar",
       icon: (
         <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
           <path d="M9 18h6" />
@@ -318,128 +279,110 @@ const CHAT_SHORTCUT_POOL: Array<Array<typeof CHAT_SHORTCUTS[number]>> = [
         </svg>
       ),
     },
-    {
-      label: "Plano de economia",
-      text: "crie um plano simples para economizar 300 por mes",
-      icon: (
-        <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
-          <path d="M5 5h14v14H5z" />
-          <path d="M8 9h8" />
-          <path d="M8 13h6" />
-        </svg>
-      ),
-    },
   ],
   [
     {
-      label: "Planejar gastos fixos",
-      text: "me ajude a organizar meus gastos fixos",
-      icon: (
-        <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
-          <path d="M4 5h16v14H4z" />
-          <path d="M8 9h8" />
-          <path d="M8 13h6" />
-        </svg>
-      ),
-    },
-    {
-      label: "Meta de reserva",
-      text: "quero montar reserva de emergencia",
-      icon: (
-        <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
-          <path d="M12 3v18" />
-          <path d="M7 7h10" />
-          <path d="M7 17h10" />
-        </svg>
-      ),
-    },
-    {
-      label: "Gasto recorrente",
-      text: "me ajude a identificar gastos recorrentes",
-      icon: (
-        <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
-          <path d="M3 12a9 9 0 1 0 3-6.7" />
-          <path d="M3 4v5h5" />
-        </svg>
-      ),
-    },
-    {
-      label: "Despesas por categoria",
-      text: "quero ver minhas despesas por categoria",
-      icon: (
-        <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
-          <path d="M4 12h7V4" />
-          <path d="M12 12h8" />
-          <path d="M4 12v8h8" />
-        </svg>
-      ),
-    },
-    {
-      label: "Dica para poupar",
-      text: "me de uma dica pratica para poupar hoje",
-      icon: (
-        <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
-          <path d="M12 3v6" />
-          <path d="M9 9h6" />
-          <path d="M8 14h8" />
-          <path d="M6 19h12" />
-        </svg>
-      ),
-    },
-  ],
-  [
-    {
-      label: "Planejar viagem",
-      text: "quero montar um plano para uma viagem",
-      icon: (
-        <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
-          <path d="M3 12h18" />
-          <path d="M12 3v18" />
-          <path d="M7 7l10 10" />
-        </svg>
-      ),
-    },
-    {
-      label: "Renda extra",
-      text: "me ajude com ideias de renda extra",
+      label: "Despesa mercado",
+      text: "paguei 200 no mercado",
       icon: (
         <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
           <path d="M12 2v20" />
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H17" />
+        </svg>
+      ),
+    },
+    {
+      label: "Conta luz",
+      text: "paguei 150 de conta de luz",
+      icon: (
+        <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+          <path d="M12 2v20" />
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H17" />
+        </svg>
+      ),
+    },
+    {
+      label: "Transporte",
+      text: "gastei 80 no uber",
+      icon: (
+        <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+          <path d="M12 2v20" />
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H17" />
+        </svg>
+      ),
+    },
+    {
+      label: "Receita extra",
+      text: "recebi 500 de freela",
+      icon: (
+        <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+          <path d="M12 2v20" />
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H17" />
+        </svg>
+      ),
+    },
+    {
+      label: "Planejar mes",
+      text: "me ajude a planejar as despesas do mes",
+      chipId: "categorias",
+      icon: (
+        <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+          <path d="M3 12l7-7h7l4 4v7l-7 7-11-11z" />
+          <path d="M16 8h.01" />
+        </svg>
+      ),
+    },
+  ],
+  [
+    {
+      label: "Meta viagem",
+      text: "quero guardar 2000 para viajar",
+      icon: (
+        <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="9" />
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 3v2" />
+        </svg>
+      ),
+    },
+    {
+      label: "Reserva emergência",
+      text: "quero criar reserva de emergencia",
+      icon: (
+        <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+          <path d="M12 3v18" />
           <path d="M7 7h10" />
           <path d="M7 17h10" />
         </svg>
       ),
     },
     {
-      label: "Cartao e limites",
-      text: "quero revisar meus limites do cartao",
+      label: "Cortar gastos",
+      text: "me mostre onde posso economizar",
+      icon: (
+        <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+          <path d="M3 17l6-6 4 4 8-8" />
+          <path d="M21 8v8h-8" />
+        </svg>
+      ),
+    },
+    {
+      label: "Investimento",
+      text: "quero começar a investir",
+      icon: (
+        <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+          <path d="M12 2v20" />
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H17" />
+        </svg>
+      ),
+    },
+    {
+      label: "Cartão crédito",
+      text: "quero analisar minha fatura do cartao",
       icon: (
         <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
           <rect x="3" y="5" width="18" height="14" rx="3" />
           <path d="M3 10h18" />
-        </svg>
-      ),
-    },
-    {
-      label: "Despesas essenciais",
-      text: "me ajude a separar despesas essenciais",
-      icon: (
-        <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
-          <path d="M6 4h12v16H6z" />
-          <path d="M9 8h6" />
-          <path d="M9 12h6" />
-        </svg>
-      ),
-    },
-    {
-      label: "Rotina financeira",
-      text: "crie uma rotina financeira semanal para mim",
-      icon: (
-        <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
-          <rect x="4" y="6" width="16" height="14" rx="2" />
-          <path d="M8 2v4" />
-          <path d="M16 2v4" />
-          <path d="M4 10h16" />
         </svg>
       ),
     },
@@ -456,6 +399,44 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 const START_MESSAGES_TEXTS: string[] = [];
+
+const QUICK_EXAMPLES_SETS: string[][] = [
+  [
+    "gastei 32 no Uber ontem a noite",
+    "paguei 189 no mercado no debito",
+    "recebi 4200 de salario hoje",
+    "gastei 68 no cinema com lanche",
+    "recebi 350 de freela por PIX",
+  ],
+  [
+    "paguei 240 de energia eletrica",
+    "gastei 97 na farmacia",
+    "recebi 180 de cashback do cartao",
+    "paguei 129 de internet fibra",
+    "recebi 950 de bonus do trabalho",
+  ],
+  [
+    "gastei 45 no almoco do trabalho",
+    "paguei 320 de combustivel",
+    "recebi 250 de venda de produto",
+    "gastei 79 em streaming e apps",
+    "recebi 120 de reembolso",
+  ],
+  [
+    "paguei 150 de academia mensal",
+    "gastei 220 em compras de casa",
+    "recebi 3000 de adiantamento",
+    "paguei 540 da parcela do cartao",
+    "recebi 430 de renda extra",
+  ],
+  [
+    "gastei 114 no ifood no fim de semana",
+    "paguei 82 de transporte publico",
+    "recebi 270 de juros de investimento",
+    "gastei 140 em roupas",
+    "recebi 1500 de cliente PJ",
+  ],
+];
 
 function getGoalCategory(text: string) {
   const lower = text.toLowerCase();
@@ -609,7 +590,11 @@ function renderInline(text: string) {
   });
 }
 
-function renderFormatted(text: string) {
+function renderFormatted(text: string | { type: 'audio'; audioUrl: string; duration: number; waveform: number[] }) {
+  if (typeof text !== 'string') {
+    return null;
+  }
+  
   const lines = text.split("\n");
   const blocks: Array<
     | { type: "p"; text: string }
@@ -850,16 +835,154 @@ function renderFormatted(text: string) {
 export default function Home() {  const [messages, setMessages] = useState<Message[]>([]);
   const [hasRotatedIntro, setHasRotatedIntro] = useState(false);
   const [shortcutSet, setShortcutSet] = useState(() => CHAT_SHORTCUT_POOL[0]);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [quickExamples, setQuickExamples] = useState<string[]>(() => QUICK_EXAMPLES_SETS[0]);
+  const [expenses, setExpenses] = useState<Expense[]>([
+    {
+      id: "1",
+      amount: 240,
+      category: "Moradia",
+      description: "paguei 240 de energia eletrica",
+      date: shortDate.format(new Date()),
+      kind: "expense",
+      createdAt: Date.now() - 86400000,
+    },
+    {
+      id: "2", 
+      amount: 97,
+      category: "Saude",
+      description: "gastei 97 na farmacia",
+      date: shortDate.format(new Date()),
+      kind: "expense",
+      createdAt: Date.now() - 172800000,
+    },
+    {
+      id: "3",
+      amount: 180,
+      category: "Receita", 
+      description: "recebi 180 de cashback do cartao",
+      date: shortDate.format(new Date()),
+      kind: "income",
+      createdAt: Date.now() - 259200000,
+    },
+    {
+      id: "4",
+      amount: 129,
+      category: "Moradia",
+      description: "paguei 129 de internet fibra",
+      date: shortDate.format(new Date()),
+      kind: "expense", 
+      createdAt: Date.now() - 345600000,
+    },
+    {
+      id: "5",
+      amount: 950,
+      category: "Receita",
+      description: "recebi 950 de bonus do trabalho",
+      date: shortDate.format(new Date()),
+      kind: "income",
+      createdAt: Date.now() - 432000000,
+    },
+  ]);
   const [pendingExpense, setPendingExpense] = useState<Expense | null>(null);
   const [pendingGoal, setPendingGoal] = useState<GoalDraft | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const messageSeq = useRef(0);
   const [input, setInput] = useState("");
   const [activeChip, setActiveChip] = useState<ChipId | null>(null);
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [audioData, setAudioData] = useState<number[]>(new Array(18).fill(8));
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationRef = useRef<number | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+
+  const startAudioCapture = async () => {
+    try {
+      // Limpar contexto anterior se existir
+      if (audioContextRef.current) {
+        const context = audioContextRef.current;
+        if (context.state !== 'closed') {
+          try {
+            await context.close();
+          } catch (e) {
+            // Ignora erro ao fechar
+          }
+        }
+        audioContextRef.current = null;
+      }
+      
+      if (analyserRef.current) {
+        analyserRef.current = null;
+      }
+      
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+      source.connect(analyserRef.current);
+      analyserRef.current.fftSize = 32;
+      
+      const updateAudioData = () => {
+        if (analyserRef.current && isRecording && audioContextRef.current && audioContextRef.current.state !== 'closed') {
+          try {
+            const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+            analyserRef.current.getByteFrequencyData(dataArray);
+            const normalizedData = Array.from(dataArray).map(value => {
+              const normalized = (value / 255) * 24 + 4; // 4px a 28px
+              return Math.max(4, Math.min(28, normalized));
+            });
+            setAudioData(normalizedData.slice(0, 18));
+            animationRef.current = requestAnimationFrame(updateAudioData);
+          } catch (e) {
+            // Para animação se houver erro
+            if (animationRef.current) {
+              cancelAnimationFrame(animationRef.current);
+              animationRef.current = null;
+            }
+          }
+        }
+      };
+      
+      updateAudioData();
+    } catch (error) {
+      console.error('Erro ao capturar áudio:', error);
+    }
+  };
+
+  const stopAudioCapture = () => {
+    try {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
+      if (audioContextRef.current) {
+        const context = audioContextRef.current;
+        if (context.state !== 'closed') {
+          context.close().catch(() => {
+            // Ignora erro de close, só limpa a referência
+          });
+        }
+        audioContextRef.current = null;
+      }
+      setAudioData(new Array(18).fill(8));
+    } catch (error) {
+      // Ignora qualquer erro na limpeza
+      console.log('Cleanup completed');
+    }
+  };
+
+  useEffect(() => {
+    if (isRecording) {
+      startAudioCapture();
+    } else {
+      stopAudioCapture();
+    }
+    return () => stopAudioCapture();
+  }, [isRecording]);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [showDashboard, setShowDashboard] = useState(false);
   const [dashboardMax, setDashboardMax] = useState(false);
-  const [dashboardMin, setDashboardMin] = useState(false);
   const [dashboardTab, setDashboardTab] = useState<"geral" | "metas">("geral");
   const [showResumo, setShowResumo] = useState(false);
   const [showMonthClose, setShowMonthClose] = useState(false);
@@ -911,6 +1034,16 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
     setShortcutSet(
       CHAT_SHORTCUT_POOL[Math.floor(Math.random() * CHAT_SHORTCUT_POOL.length)]
     );
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const key = "prometheus-quick-examples-rotation";
+    const current = Number(window.localStorage.getItem(key) ?? "0");
+    const next = Number.isFinite(current) ? current + 1 : 1;
+    window.localStorage.setItem(key, String(next));
+    const setIndex = next % QUICK_EXAMPLES_SETS.length;
+    setQuickExamples(QUICK_EXAMPLES_SETS[setIndex]);
   }, []);
 
   const monthCloseKey = useMemo(() => {
@@ -1110,28 +1243,24 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
       .slice(0, 5);
   }, [expenses]);
 
+  const safeCategoryTotals: Array<[string, number]> = categoryTotals.length
+    ? categoryTotals
+    : [["Sem dados", 0]];
+
   const contextSummary = useMemo(() => {
     const topCategory = categoryTotals[0]?.[0] ?? "Sem dados";
     const topCategoryValue = categoryTotals[0]?.[1] ?? 0;
-    const activeGoals = goalItems
-      .slice(0, 3)
-      .map(
-        (goal) =>
-          `${goal.title} (${goal.category}) alvo ${currency.format(goal.target)} progresso ${
-            goal.progress
-          }%`
-      )
-      .join("; ");
-    const recent = expenses.slice(0, 5).map((entry) => entry.description).join(", ");
+    const activeGoal = goalItems[0];
+    const recent = expenses.slice(0, 3).map((entry) => entry.description).join(", ");
     return [
-      `Saldo atual ${currency.format(totals.balance)}`,
-      `Gastos no mes ${currency.format(totals.spent)}`,
-      `Entradas no mes ${currency.format(totals.income)}`,
-      `Categoria dominante ${topCategory} ${currency.format(topCategoryValue)}`,
-      activeGoals ? `Metas ativas: ${activeGoals}` : "Sem metas ativas",
-      recent ? `Ultimos lancamentos: ${recent}` : "Sem lancamentos recentes",
-    ].join(". ");
-  }, [categoryTotals, currency, expenses, goalItems, totals.balance, totals.income, totals.spent]);
+      `Saldo ${currency.format(totals.balance)}`,
+      `Gastos ${currency.format(totals.spent)}`,
+      `Entradas ${currency.format(totals.income)}`,
+      `Top: ${topCategory}`,
+      activeGoal ? `Meta: ${activeGoal.title} ${activeGoal.progress}%` : "",
+      recent ? `Recentes: ${recent}` : "",
+    ].filter(Boolean).join(". ");
+  }, [categoryTotals, currency, expenses, goalItems, totals]);
 
   const compass = useMemo(() => {
     const now = Date.now();
@@ -1140,37 +1269,100 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
     const previousWindow = expenses.filter(
       (entry) => now - entry.createdAt > sevenDays && now - entry.createdAt <= sevenDays * 2
     );
-    const sum = (items: Expense[]) =>
+    const sumNet = (items: Expense[]) =>
       items.reduce(
         (acc, item) =>
           acc +
           (item.kind === "income" ? item.amount : -item.amount),
         0
       );
-    const currentNet = sum(currentWindow);
-    const previousNet = sum(previousWindow);
+    const sumByKind = (items: Expense[], kind: Expense["kind"]) =>
+      items.filter((item) => item.kind === kind).reduce((acc, item) => acc + item.amount, 0);
+
+    const currentNet = sumNet(currentWindow);
+    const previousNet = sumNet(previousWindow);
+    const currentIncome = sumByKind(currentWindow, "income");
+    const currentExpense = sumByKind(currentWindow, "expense");
     const delta = currentNet - previousNet;
-    const direction = delta >= 0 ? "alta" : "baixa";
-    const angle = Math.max(Math.min(delta * 2, 45), -45);
+    const deltaBase = Math.max(Math.abs(previousNet), 1);
+    const deltaPct = (delta / deltaBase) * 100;
+    const angle = Math.max(Math.min(deltaPct * 0.8, 55), -55);
+    const status = deltaPct > 5 ? "up" : deltaPct < -5 ? "down" : "neutral";
+    const direction = status === "up" ? "alta" : status === "down" ? "baixa" : "estavel";
     const label =
-      delta === 0
-        ? "Estavel"
-        : direction === "alta"
-        ? "Rumo positivo"
-        : "Rumo de atencao";
-    const status = delta === 0 ? "neutral" : delta > 0 ? "up" : "down";
-    return { angle, label, delta, currentNet, status };
+      status === "up"
+        ? "Acelerando"
+        : status === "down"
+        ? "Rumo de atencao"
+        : "Estavel";
+
+    const spendingPressure =
+      currentIncome > 0 ? Math.min(100, (currentExpense / currentIncome) * 100) : 100;
+    const confidence = Math.max(
+      18,
+      Math.min(96, currentWindow.length * 9 + Math.min(Math.abs(deltaPct), 38))
+    );
+    const healthScore = Math.max(
+      0,
+      Math.min(
+        100,
+        Math.round(
+          52 +
+            (status === "up" ? 18 : status === "down" ? -16 : 0) +
+            (spendingPressure < 70 ? 12 : spendingPressure > 95 ? -12 : 0)
+        )
+      )
+    );
+
+    const recommendation =
+      status === "up"
+        ? "Momento bom para direcionar excedente para metas e reserva."
+        : status === "down"
+        ? "Revise gastos variaveis e proteja o caixa dos proximos 7 dias."
+        : "Mantenha o ritmo e acompanhe despesas variaveis com mais frequencia.";
+
+    const dayMs = 24 * 60 * 60 * 1000;
+    const spark = Array.from({ length: 8 }).map((_, idx) => {
+      const dayStart = now - (7 - idx) * dayMs;
+      const dayEnd = dayStart + dayMs;
+      const value = expenses
+        .filter((item) => item.createdAt >= dayStart && item.createdAt < dayEnd)
+        .reduce((acc, item) => acc + (item.kind === "income" ? item.amount : -item.amount), 0);
+      return value;
+    });
+    const maxAbs = Math.max(...spark.map((value) => Math.abs(value)), 1);
+    const sparkline = spark.map((value) => ({
+      value,
+      pct: 50 + (value / maxAbs) * 45,
+    }));
+
+    return {
+      angle,
+      label,
+      delta,
+      deltaPct,
+      currentNet,
+      previousNet,
+      currentIncome,
+      currentExpense,
+      status,
+      direction,
+      confidence,
+      healthScore,
+      recommendation,
+      sparkline,
+    };
   }, [expenses]);
 
   const categorySeries = useMemo(
     () =>
-      (categoryTotals.length ? categoryTotals : [["Sem dados", 0]]).map(
+      safeCategoryTotals.map(
         ([category, total]) => ({
           categoria: category,
           total,
         })
       ),
-    [categoryTotals]
+    [safeCategoryTotals]
   );
 
   const metaTotals = useMemo(() => {
@@ -1180,7 +1372,9 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
   }, [expenses]);
 
   const donutData = useMemo(() => {
-    const values = categoryTotals.length ? categoryTotals : [["Sem dados", 1]];
+    const values: Array<[string, number]> = categoryTotals.length
+      ? categoryTotals
+      : [["Sem dados", 1]];
     const total = values.reduce((sum, [, value]) => sum + value, 0) || 1;
     let acc = 0;
     return values.map(([label, value], index) => {
@@ -1279,41 +1473,100 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
 
   function pushMessage(
     role: Message["role"],
-    text: string,
+    text: string | { type: 'audio'; audioUrl: string; duration: number; waveform: number[] },
+    id?: string,
     actions?: Message["actions"]
   ) {
-    messageSeq.current += 1;
-    const uniqueId = `${Date.now()}-${messageSeq.current}-${Math.random()}`;
-    setMessages((current) => [
-      ...current,
-      {
-        id: uniqueId,
-        role,
-        text,
-        timestamp: shortDate.format(new Date()),
-        actions,
-      },
-    ]);
+    const uniqueId = id || `${Date.now()}-${messageSeq.current}-${Math.random()}`;
+    if (!id) {
+      messageSeq.current += 1;
+    }
+    setMessages((current) => {
+      const existing = current.find(msg => msg.id === uniqueId);
+      if (existing) {
+        return current.map((msg) =>
+          msg.id === uniqueId ? { ...msg, text, timestamp: shortDate.format(new Date()) } : msg
+        );
+      }
+      return [
+        ...current,
+        {
+          id: uniqueId,
+          role,
+          text,
+          timestamp: shortDate.format(new Date()),
+          actions,
+        },
+      ];
+    });
     return uniqueId;
+  }
+
+  function handleFileAttach(files: FileList | null) {
+    if (!files) return;
+    const validFiles = Array.from(files).filter(file => 
+      file.type.startsWith('image/') || file.type === 'application/pdf'
+    );
+    setAttachedFiles(prev => [...prev, ...validFiles]);
+  }
+
+  function removeFile(index: number) {
+    setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+  }
+
+  function clearAttachments() {
+    setAttachedFiles([]);
+  }
+
+  function updateMessage(id: string, text: string) {
+    setMessages((current) =>
+      current.map((msg) =>
+        msg.id === id ? { ...msg, text, timestamp: shortDate.format(new Date()) } : msg
+      )
+    );
   }
 
   async function askAI(prompt: string) {
     setIsTyping(true);
+    const messageId = Date.now().toString();
+    pushMessage("assistant", "", messageId);
+    
     try {
-      const contextualPrompt = `Contexto do usuario: ${contextSummary}. Pergunta: ${prompt}`;
-      const response = await fetch("/api/ollama", {
+      const contextualPrompt = `Contexto: ${contextSummary}. Pergunta: ${prompt}`;
+      const response = await fetch("/api/ollama/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: contextualPrompt }),
       });
+      
       if (!response.ok) {
-        pushMessage("assistant", "Promethus AI esta indisponivel no momento.");
+        updateMessage(messageId, "Promethus AI esta indisponivel no momento.");
         return;
       }
-      const data = await response.json();
-      pushMessage("assistant", data.text || "Ainda nao consegui responder com clareza.");
-    } catch {
-      pushMessage("assistant", "Promethus AI esta indisponivel no momento.");
+      
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedText = "";
+      
+      if (!reader) {
+        updateMessage(messageId, "Erro na resposta.");
+        return;
+      }
+      
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          const chunk = decoder.decode(value, { stream: true });
+          accumulatedText += chunk;
+          updateMessage(messageId, accumulatedText);
+        }
+      } finally {
+        reader.releaseLock();
+      }
+    } catch (error) {
+      updateMessage(messageId, "Promethus AI esta indisponivel no momento.");
     } finally {
       setIsTyping(false);
     }
@@ -1336,8 +1589,22 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
 
   async function handleSend(text: string) {
     const clean = text.trim();
-    if (!clean) return;
-    pushMessage("user", clean);
+    if (!clean && attachedFiles.length === 0) return;
+    
+    // Clear input and attachments immediately after sending
+    setInput("");
+    clearAttachments();
+    
+    // Add file info to message if files are attached
+    let messageText = clean;
+    if (attachedFiles.length > 0) {
+      const fileNames = attachedFiles.map(file => 
+        `${file.type.startsWith('image/') ? '🖼️' : '📄'} ${file.name}`
+      ).join(', ');
+      messageText = clean ? `${clean}\n\nArquivos anexados: ${fileNames}` : `Analisando arquivos: ${fileNames}`;
+    }
+    
+    pushMessage("user", messageText);
 
     const lower = clean.toLowerCase();
     const goalAmountMatch = lower.match(/(?:meta|aporte|adicionar|aplicar)\\s*(\\d+[\\.,]?\\d*)/);
@@ -1542,6 +1809,7 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
         pushMessage(
           "assistant",
           `Meta sugerida: ${title} na categoria ${draft.category}, valor ${currency.format(value)}.`,
+          undefined,
           [{ label: "Lançar", action: "save-goal", goalId: draft.id }]
         );
       } else {
@@ -1556,6 +1824,40 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
     }
 
     const parsed = parseExpense(clean);
+    if (!parsed && attachedFiles.length === 0) {
+      askAI(clean);
+      return;
+    }
+
+    // Handle file uploads
+    if (attachedFiles.length > 0) {
+      setIsTyping(true);
+      try {
+        const formData = new FormData();
+        attachedFiles.forEach(file => formData.append('files', file));
+        if (clean) formData.append('prompt', clean);
+
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          pushMessage("assistant", "Não consegui processar os arquivos. Tente novamente.");
+          return;
+        }
+
+        const data = await response.json();
+        pushMessage("assistant", data.text || "Arquivos processados com sucesso!");
+      } catch (error) {
+        pushMessage("assistant", "Erro ao processar arquivos. Tente novamente.");
+      } finally {
+        setIsTyping(false);
+        clearAttachments();
+      }
+      return;
+    }
+
     if (!parsed) {
       askAI(clean);
       return;
@@ -1575,6 +1877,73 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
     pushMessage("assistant", buildImpactNote(finalExpense, totals, goalItems));
     setPendingExpense(null);
   }
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks: Blob[] = [];
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data);
+        }
+      };
+
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        // Create an audio element to get duration
+        const audio = new Audio(audioUrl);
+        audio.onloadedmetadata = () => {
+          // Here you can process the audio, send to API, etc.
+          console.log('Audio recorded:', audio.duration, 'seconds');
+          
+          // Generate static waveform data for the message
+          const waveformBars = Array.from({ length: 18 }, () => Math.random() * 20 + 8);
+          
+          // Add audio message with waveform
+          pushMessage("user", {
+            type: 'audio',
+            audioUrl: audioUrl,
+            duration: Math.round(audio.duration),
+            waveform: waveformBars
+          });
+          
+          pushMessage("assistant", "Áudio recebido! Funcionalidade de transcrição será implementada em breve.");
+        };
+
+        // Clean up
+        stream.getTracks().forEach(track => track.stop());
+        setAudioChunks([]);
+      };
+
+      recorder.start();
+      setMediaRecorder(recorder);
+      setIsRecording(true);
+      setAudioChunks(chunks);
+
+      // Auto-stop after 30 seconds
+      setTimeout(() => {
+        if (recorder.state === 'recording') {
+          stopRecording();
+        }
+      }, 30000);
+
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      pushMessage("assistant", "Não foi possível acessar o microfone. Verifique as permissões do navegador.");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+      setIsRecording(false);
+      setMediaRecorder(null);
+    }
+  };
 
   const recentExpenses = expenses.slice(0, 5);
 
@@ -1802,25 +2171,28 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
             </div>
           </div>
 
-          <div className="card section-anchor" id="section-relatorios">
-            <h2>Exemplos rapidos</h2>
-            <div className="quick-actions">
-              {[
-                "gastei 32 no Uber",
-                "paguei 189 no mercado",
-                "recebi 4200 de salario",
-                "gastei 68 no cinema",
-              ].map((text) => (
-                <button
-                  type="button"
-                  key={text}
-                  onClick={() => {
-                    setInput(text);
-                  }}
-                >
-                  {text}
-                </button>
-              ))}
+          <div className="card section-anchor quick-examples-card" id="section-relatorios">
+            <div className="quick-examples-head">
+              <h2>Exemplos rapidos</h2>
+              <p>Toque para preencher o chat com receitas e despesas reais do dia a dia.</p>
+            </div>
+            <div className="quick-examples-list">
+              {quickExamples.map((text) => {
+                const isIncome = /recebi|entrou|ganhei|bonus|reembolso|cashback|juros/i.test(text);
+                return (
+                  <button
+                    type="button"
+                    key={text}
+                    className={`quick-example-btn ${isIncome ? "is-income" : "is-expense"}`}
+                    onClick={() => {
+                      setInput(text);
+                    }}
+                  >
+                    <span className="quick-example-type">{isIncome ? "Receita" : "Despesa"}</span>
+                    <span className="quick-example-text">{text}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -1879,7 +2251,7 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
           <div className="chat-header">
             <div className="chat-header-text">
               <h2>Chat financeiro</h2>
-              <p>Traga sua conversa e eu organizo cada passo com clareza.</p>
+              <p>Olá! Sou seu assistente financeiro. Como posso ajudar você hoje?</p>
             </div>
             <div className="chat-header-actions">
               <button
@@ -1920,7 +2292,34 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
           <div className="chat-window" ref={chatWindowRef}>
             {messages.map((message) => (
               <div key={message.id} className={`message ${message.role}`}>
-                {message.role === "assistant" ? renderFormatted(message.text) : message.text}
+                {message.role === "assistant" ? (
+                  renderFormatted(message.text)
+                ) : typeof message.text === 'string' ? (
+                  message.text
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '12px', margin: '4px 0' }}>
+                    <audio controls style={{ width: '140px', height: '32px' }}>
+                      <source src={message.text.audioUrl} type="audio/webm" />
+                    </audio>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flex: 1 }}>
+                      {message.text.waveform.map((height, i) => (
+                        <div
+                          key={i}
+                          style={{
+                            width: '2px',
+                            height: `${height}px`,
+                            background: 'rgba(239, 68, 68, 0.7)',
+                            borderRadius: '1px',
+                            margin: '0 1px'
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <span style={{ fontSize: '12px', color: '#666', opacity: 0.7 }}>
+                      {message.text.duration}s
+                    </span>
+                  </div>
+                )}
                 {message.actions ? (
                   <div className="message-actions">
                     {message.actions.map((action) => (
@@ -1943,7 +2342,7 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
                               )}.`
                             );
                             const plan = buildGoalPlan(pendingGoal);
-                            pushMessage("assistant", plan.text, plan.actions);
+                            pushMessage("assistant", plan.text, undefined, plan.actions);
                           }
                           if (action.action === "init-goal-deposit") {
                             const target = goalItems.find((goal) => goal.id === action.goalId);
@@ -1982,16 +2381,18 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
               </div>
             ))}
             {isTyping ? (
-              <div className="message assistant typing">
+              <div className="message assistant typing" style={{ display: 'none' }}>
                 <span className="dot" />
                 <span className="dot" />
                 <span className="dot" />
               </div>
             ) : null}
             {messages.length === 0 && !isTyping ? (
-              <div className="chat-center">
+              <div className="chat-center" style={{ display: 'block', padding: '20px' }}>
                 <div className="chat-shortcuts chat-shortcuts-center">
-                  <div className="chat-shortcuts-title subtle">Como posso ajudar?</div>
+                  <p style={{ color: '#666', fontSize: '14px', marginBottom: '20px', textAlign: 'center' }}>
+                    Escolha uma opção abaixo ou digite sua despesa/receita
+                  </p>
                   <div className="chat-shortcuts-grid icons-only">
                     {shortcutSet.map((shortcut) => (
                       <button
@@ -2016,34 +2417,418 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
             ) : null}
           </div>
 
-          <div className="chat-footer">
-            <form
-              className="input-area"
-              onSubmit={(event) => {
-                event.preventDefault();
-                handleSend(input);
-                setInput("");
-              }}
-            >
+          {/* Chat Input */}
+          <div className="chat-input-container" style={{
+            padding: '16px',
+            background: 'transparent',
+            display: 'block',
+            visibility: 'visible',
+            opacity: '1',
+            position: 'relative',
+            zIndex: '100'
+          }}>
+            <div className="input-wrapper" style={{
+              display: 'grid',
+              gridTemplateAreas: '"leading textarea trailing"',
+              gridTemplateColumns: 'auto 1fr auto',
+              alignItems: 'center',
+              gap: '12px',
+              padding: attachedFiles.length > 0 ? '16px' : '8px 16px',
+              background: 'linear-gradient(135deg, #1f2937 0%, #2a1f3f 50%, #1f2937 100%)',
+              borderRadius: '28px',
+              border: 'none',
+              minHeight: attachedFiles.length > 0 ? '120px' : '44px',
+              width: '100%',
+              maxWidth: '750px',
+              margin: '0 auto',
+              position: 'relative',
+              transition: 'none'
+            }}>
+              <button
+                type="button"
+                className="attach-button"
+                style={{
+                  position: 'relative',
+                  zIndex: 2,
+                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(168, 85, 247, 0.1) 50%, rgba(59, 130, 246, 0.15) 100%)',
+                  border: '1px solid rgba(59, 130, 246, 0.1)',
+                  color: 'rgba(59, 130, 246, 0.6)',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '12px',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  textShadow: 'none',
+                  filter: 'brightness(1)',
+                  boxShadow: 'none'
+                }}
+                onClick={() => {
+                  // Remover menu existente se houver
+                  const existingMenu = document.querySelector('.attach-menu');
+                  if (existingMenu) {
+                    existingMenu.remove();
+                    return;
+                  }
+                  
+                  // Criar menu de opções
+                  const menu = document.createElement('div');
+                  menu.className = 'attach-menu';
+                  menu.style.cssText = `
+                    position: absolute;
+                    bottom: 50px;
+                    left: 0;
+                    transform: translateX(0) scale(0.8);
+                    background: #1f2937;
+                    border: 1px solid #3b82f6;
+                    border-radius: 12px;
+                    padding: 8px;
+                    z-index: 1000;
+                    box-shadow: 0 0 10px rgba(59, 130, 246, 0.2), 0 0 20px rgba(59, 130, 246, 0.05), inset 0 0 10px rgba(59, 130, 246, 0.05), inset 0 0 5px rgba(168, 85, 247, 0.02);
+                    min-width: 120px;
+                    opacity: 0;
+                    transition: all 0.2s ease;
+                    transform-origin: bottom left;
+                  `;
+                  
+                  menu.innerHTML = `
+                    <button onclick="document.getElementById('imageInput').click(); this.parentElement.remove();" style="
+                      display: block;
+                      width: 100%;
+                      padding: 8px 12px;
+                      background: none;
+                      border: none;
+                      color: #3b82f6;
+                      text-align: left;
+                      cursor: pointer;
+                      border-radius: 6px;
+                      font-size: 14px;
+                      text-shadow: 0 0 5px rgba(59, 130, 246, 0.3);
+                      filter: brightness(1.1);
+                      transition: all 0.2s ease;
+                    " onmouseover="this.style.background='rgba(59, 130, 246, 0.1)'" onmouseout="this.style.background='none'">📷 Imagem</button>
+                    <button onclick="document.getElementById('pdfInput').click(); this.parentElement.remove();" style="
+                      display: block;
+                      width: 100%;
+                      padding: 8px 12px;
+                      background: none;
+                      border: none;
+                      color: #3b82f6;
+                      text-align: left;
+                      cursor: pointer;
+                      border-radius: 6px;
+                      font-size: 14px;
+                      margin-top: 4px;
+                      text-shadow: 0 0 5px rgba(59, 130, 246, 0.3);
+                      filter: brightness(1.1);
+                      transition: all 0.2s ease;
+                    " onmouseover="this.style.background='rgba(59, 130, 246, 0.1)'" onmouseout="this.style.background='none'">📄 PDF</button>
+                  `;
+                  
+                  // Adicionar ao DOM
+                  const inputWrapper = document.querySelector('.input-wrapper');
+                  if (inputWrapper) {
+                    inputWrapper.appendChild(menu);
+                    
+                    // Animar entrada
+                    setTimeout(() => {
+                      menu.style.opacity = '1';
+                      menu.style.transform = 'translateX(0) scale(1)';
+                    }, 10);
+                  }
+                  
+                  // Adicionar hover effects
+                  menu.querySelectorAll('button').forEach(btn => {
+                    btn.addEventListener('mouseenter', () => {
+                      btn.style.background = '#3a3a3a';
+                    });
+                    btn.addEventListener('mouseleave', () => {
+                      btn.style.background = 'none';
+                    });
+                  });
+                  
+                  // Fechar ao clicar fora
+                  setTimeout(() => {
+                    document.addEventListener('click', function closeMenu(e) {
+                      if (!menu.contains(e.target as Node) && !(e.target as Element).closest('.attach-button')) {
+                        menu.style.opacity = '0';
+                        menu.style.transform = 'translateX(0) scale(0.8)';
+                        setTimeout(() => menu.remove(), 200);
+                        document.removeEventListener('click', closeMenu);
+                      }
+                    });
+                  }, 100);
+                }}
+                title="Anexar arquivo"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#3b82f6',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  textShadow: '0 0 5px rgba(59, 130, 246, 0.3)',
+                  filter: 'brightness(1.1)'
+                }}
+              >
+                <i className="fa-solid fa-plus"></i>
+              </button>
+              
               <textarea
-                placeholder="Ex: gastei 32 no Uber ontem"
                 value={input}
-                onChange={(event) => setInput(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault();
-                    if (input.trim()) {
-                      handleSend(input);
-                      setInput("");
-                    }
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend(input);
                   }
                 }}
+                placeholder={attachedFiles.length > 0 ? "" : "Pergunte algo ou lance uma despesa"}
+                rows={1}
+                style={{
+                  position: 'relative',
+                  zIndex: 2,
+                  height: 'auto',
+                  minHeight: '28px',
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#fff',
+                  padding: attachedFiles.length > 0 ? '60px 8px 4px 8px' : '4px 8px',
+                  borderRadius: '4px',
+                  resize: 'none',
+                  outline: 'none',
+                  fontSize: '14px',
+                  lineHeight: '1.5',
+                  overflow: 'hidden'
+                }}
+                onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement;
+                  target.style.height = 'auto';
+                  target.style.height = `${target.scrollHeight}px`;
+                }}
               />
-              <button type="submit" disabled={!input.trim()}>
-                Lançar
-              </button>
-            </form>
-            {activeChip === "categorias" ? (
+              
+              {attachedFiles.length > 0 && (
+                <div style={{
+                  position: 'absolute',
+                  top: '16px',
+                  left: '16px',
+                  right: '16px',
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '8px',
+                  alignItems: 'center',
+                  pointerEvents: 'none',
+                  zIndex: 5
+                }}>
+                  {attachedFiles.map((file, index) => (
+                    <div key={index} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      background: 'linear-gradient(135deg, #1f2937 0%, #2a1f3f 50%, #1f2937 100%)',
+                      border: '1px solid #3b82f6',
+                      borderRadius: '28px',
+                      padding: attachedFiles.length > 0 ? '16px' : '8px 16px',
+                      minHeight: attachedFiles.length > 0 ? '120px' : '44px',
+                      position: 'relative',
+                      boxShadow: '0 0 10px rgba(59, 130, 246, 0.2), 0 0 20px rgba(168, 85, 247, 0.05), inset 0 0 10px rgba(59, 130, 246, 0.05), inset 0 0 5px rgba(168, 85, 247, 0.02)',
+                      transition: 'all 0.2s ease'
+                    }}>
+                      {file.type.startsWith('image/') ? (
+                        <img 
+                          src={URL.createObjectURL(file)} 
+                          alt={file.name}
+                          style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '8px',
+                            objectFit: 'cover',
+                            flexShrink: 0
+                          }}
+                        />
+                      ) : (
+                        <span style={{ fontSize: '20px', flexShrink: 0 }}>📄</span>
+                      )}
+                      <span style={{
+                        color: '#f3f4f6',
+                        fontSize: '13px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        flex: 1,
+                        minWidth: 0
+                      }}>
+                        {file.name}
+                      </span>
+                      <button
+                        onClick={() => {
+                          setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#9ca3af',
+                          cursor: 'pointer',
+                          padding: '0',
+                          borderRadius: '50%',
+                          fontSize: '14px',
+                          width: '18px',
+                          height: '18px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              <div className="right-icons" style={{
+                display: 'flex',
+                gap: '12px',
+                alignItems: 'center',
+                position: 'relative',
+                zIndex: 2
+              }}>
+                <button
+                  type="button"
+                  className="attach-button"
+                  title="Gravar áudio"
+                  onClick={() => {
+                    if (!isRecording) {
+                      startRecording();
+                    } else {
+                      stopRecording();
+                    }
+                  }}
+                  style={{
+                    background: isRecording ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.1))' : 'transparent',
+                    border: isRecording ? '1px solid rgba(239, 68, 68, 0.4)' : 'none',
+                    color: isRecording ? '#f0f0f0' : '#bdbdbd',
+                    fontSize: isRecording ? '18px' : '16px',
+                    cursor: 'pointer',
+                    padding: isRecording ? '6px' : '4px',
+                    borderRadius: isRecording ? '12px' : '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: isRecording ? '40px' : '32px',
+                    height: isRecording ? '40px' : '32px',
+                    transition: 'all 0.3s ease',
+                    position: 'relative',
+                    overflow: 'visible',
+                    animation: 'none',
+                    boxShadow: 'none'
+                  }}
+                >
+                  {isRecording && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '-270%',
+                      transform: 'translate(-50%, -50%)',
+                      width: '180px',
+                      height: '32px',
+                      background: 'rgba(239, 68, 68, 0.04)',
+                      borderRadius: '16px',
+                      padding: '6px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '2px',
+                      zIndex: 10
+                    }}>
+                      {audioData.map((height, i) => {
+                        const intensity = height / 28;
+                        return (
+                          <div
+                            key={`waveform-${i}`}
+                            style={{
+                              width: '3px',
+                              height: `${height}px`,
+                              background: intensity > 0.6 ? 'rgba(239, 68, 68, 0.4)' : intensity > 0.3 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.2)',
+                              borderRadius: '2px',
+                              transition: 'height 0.12s cubic-bezier(0.25, 0.46, 0.45, 0.94), background 0.2s ease',
+                              animation: 'none',
+                              transform: 'scaleY(1)',
+                              transformOrigin: 'bottom',
+                              margin: '0 1px'
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
+                  <i className={`fa-solid ${isRecording ? 'fa-stop' : 'fa-microphone'}`}></i>
+                </button>
+                
+                <button
+                  type="button"
+                  className={`send-btn ${(input.trim() || attachedFiles.length > 0) ? 'active' : ''}`}
+                  onClick={() => handleSend(input)}
+                  disabled={!input.trim() && attachedFiles.length === 0}
+                  title="Enviar mensagem"
+                  style={{
+                    background: (input.trim() || attachedFiles.length > 0) ? 'linear-gradient(135deg, rgba(168, 85, 247, 0.5) 0%, rgba(147, 51, 234, 0.5) 50%, rgba(168, 85, 247, 0.5) 100%)' : 'transparent',
+                    color: (input.trim() || attachedFiles.length > 0) ? '#fff' : '#9ca3af',
+                    border: (input.trim() || attachedFiles.length > 0) ? '1px solid rgba(168, 85, 247, 0.3)' : '1px solid #374151',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '14px',
+                    pointerEvents: (input.trim() || attachedFiles.length > 0) ? 'auto' : 'none',
+                    transition: 'all 0.2s ease',
+                    boxShadow: (input.trim() || attachedFiles.length > 0) ? '0 0 15px rgba(168, 85, 247, 0.3), 0 0 30px rgba(168, 85, 247, 0.15), inset 0 0 10px rgba(168, 85, 247, 0.15)' : 'none',
+                    textShadow: (input.trim() || attachedFiles.length > 0) ? '0 0 8px rgba(255, 255, 255, 0.4)' : 'none'
+                  }}
+                >
+                  <i className="fa-solid fa-arrow-up"></i>
+                </button>
+              </div>
+              
+              <input
+                type="file"
+                id="imageInput"
+                accept="image/*"
+                hidden
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || []);
+                  setAttachedFiles(prev => [...prev, ...files]);
+                  e.target.value = '';
+                }}
+              />
+              <input
+                type="file"
+                id="pdfInput"
+                accept="application/pdf"
+                hidden
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || []);
+                  setAttachedFiles(prev => [...prev, ...files]);
+                  e.target.value = '';
+                }}
+              />
+            </div>
+          </div>
+
+          {activeChip === "categorias" ? (
               <div className="list">
                 {categoryTotals.length === 0 ? (
                   <p className="empty-state">Sem categorias ainda. Lance sua primeira despesa.</p>
@@ -2060,7 +2845,6 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
                 )}
               </div>
             ) : null}
-          </div>
         </section>
         </section>
       </div>
@@ -2201,11 +2985,9 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
       ) : null}
 
       {showDashboard ? (
-        <div className="modal-overlay" onClick={() => setShowDashboard(false)}>
+        <div className="modal-overlay dashboard-overlay" onClick={() => setShowDashboard(false)}>
           <div
-            className={`modal dashboard-modal ${dashboardMax ? "dashboard-max" : ""} ${
-              dashboardMin ? "dashboard-min" : ""
-            }`}
+            className={`modal dashboard-modal ${dashboardMax ? "dashboard-max" : ""}`}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="modal-titlebar">
@@ -2232,59 +3014,73 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
                 <button
                   type="button"
                   className="icon-btn icon-btn-sm"
-                  onClick={() => {
-                    setDashboardMin((prev) => !prev);
-                    if (dashboardMax) setDashboardMax(false);
-                  }}
-                >
-                  —
-                </button>
-                <button
-                  type="button"
-                  className="icon-btn icon-btn-sm"
+                  title={dashboardMax ? "Restaurar" : "Maximizar"}
+                  aria-label={dashboardMax ? "Restaurar" : "Maximizar"}
                   onClick={() => {
                     setDashboardMax((prev) => !prev);
-                    if (dashboardMin) setDashboardMin(false);
                   }}
                 >
-                  ⤢
+                  {dashboardMax ? "⤡" : "⤢"}
                 </button>
                 <button
                   type="button"
-                  className="icon-btn icon-btn-sm"
+                  className="icon-btn icon-btn-sm icon-remove"
                   onClick={() => setShowDashboard(false)}
                 >
                   ✕
                 </button>
               </div>
             </div>
-            {!dashboardMin ? (
             <div className="dashboard-body">
             {dashboardTab === "geral" ? (
             <>
-            <div className="card dashboard-hero">
-              <div>
-                <p>Panorama rapido do seu mes financeiro.</p>
-              </div>
-              <div className="dashboard-kpis">
-                <div>
-                  <span>Saldo</span>
-                  <strong>{currency.format(totals.balance)}</strong>
+            <div className="card dashboard-hero dashboard-hero-compass">
+              <h3>Rumo financeiro</h3>
+              <div className="compass">
+                <div className="compass-main">
+                  <div className={`compass-ring compass-${compass.status}`}>
+                    <div
+                      className={`compass-arrow compass-${compass.status}`}
+                      style={{ transform: `rotate(${compass.angle}deg)` }}
+                    />
+                    <span className="compass-score">{compass.healthScore}</span>
+                  </div>
+                  <div className="compass-sparkline" aria-hidden="true">
+                    {compass.sparkline.map((point, idx) => (
+                      <span key={`${point.value}-${idx}`} style={{ height: `${point.pct}%` }} />
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <span>Entradas</span>
-                  <strong>{currency.format(totals.income)}</strong>
-                </div>
-                <div>
-                  <span>Gastos</span>
-                  <strong>{currency.format(totals.spent)}</strong>
+                <div className="compass-meta">
+                  <strong className="compass-title">{compass.label}</strong>
+                  <span className="compass-subtitle">
+                    Variacao 7 dias: {currency.format(compass.delta)} ({compass.deltaPct >= 0 ? "+" : ""}
+                    {compass.deltaPct.toFixed(1)}%)
+                  </span>
+                  <div className="compass-chips">
+                    <span className={`compass-chip compass-chip-${compass.status}`}>
+                      {compass.direction.charAt(0).toUpperCase() + compass.direction.slice(1)}
+                    </span>
+                    <span className="compass-chip compass-chip-muted">Confianca {Math.round(compass.confidence)}%</span>
+                  </div>
+                  <div className="compass-kpis">
+                    <div>
+                      <small>Saldo atual</small>
+                      <strong className="compass-kpi-value">{currency.format(compass.currentNet)}</strong>
+                    </div>
+                    <div>
+                      <small>Saldo anterior</small>
+                      <strong className="compass-kpi-value">{currency.format(compass.previousNet)}</strong>
+                    </div>
+                  </div>
+                  <p className="compass-tip">{compass.recommendation}</p>
                 </div>
               </div>
             </div>
             <div className="card dashboard-card" data-relevance="high">
               <h3>Top categorias</h3>
               <div className="mini-bars">
-                {(categoryTotals.length ? categoryTotals : [["Sem dados", 0]]).map(
+                {safeCategoryTotals.map(
                   ([category, total]) => (
                     <div key={category} className="mini-bar">
                       <span>{category}</span>
@@ -2323,21 +3119,6 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
                 <div>
                   <span>Receitas</span>
                   <strong>{totals.incomeCount}</strong>
-                </div>
-              </div>
-            </div>
-            <div className="card dashboard-card" data-relevance="med">
-              <h3>Rumo financeiro</h3>
-              <div className="compass">
-                <div className={`compass-ring compass-${compass.status}`}>
-                  <div
-                    className={`compass-arrow compass-${compass.status}`}
-                    style={{ transform: `rotate(${compass.angle}deg)` }}
-                  />
-                </div>
-                <div className="compass-meta">
-                  <strong>{compass.label}</strong>
-                  <span>Variacao 7 dias: {currency.format(compass.delta)}</span>
                 </div>
               </div>
             </div>
@@ -2750,7 +3531,6 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
               </button>
             </div>
             </div>
-            ) : null}
           </div>
         </div>
       ) : null}

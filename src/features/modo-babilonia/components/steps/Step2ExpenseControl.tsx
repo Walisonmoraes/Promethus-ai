@@ -20,9 +20,18 @@ export function Step2ExpenseControl() {
   }, [state.monthlyIncome, totalExpenses]);
 
   const isAlert = usage >= 90;
+  const sealIcon = (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M6 5h12M6 12h8M6 19h6M19 16v3M16 19h3" />
+    </svg>
+  );
 
   return (
-    <SectionCard title="2. Controle de Gastos" description="Classifique despesas em necessidade ou desejo e controle o limite mensal.">
+    <SectionCard
+      title="2. Controle de Gastos"
+      description="Classifique despesas em necessidade ou desejo e controle o limite mensal."
+      seal={{ icon: sealIcon, label: "Disciplina" }}
+    >
       <div className="mb-row-form">
         <input
           className="mb-input"

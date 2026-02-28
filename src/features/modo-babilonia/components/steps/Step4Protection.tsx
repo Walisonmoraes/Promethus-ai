@@ -15,11 +15,20 @@ export function Step4Protection() {
     [state.emergencyReserve, state.monthlyIncome]
   );
   const color = getEmergencyReserveColor(monthsCovered);
+  const sealIcon = (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M12 3 6 5.5v6.5c0 4 2.5 6.8 6 8 3.5-1.2 6-4 6-8V5.5z" />
+    </svg>
+  );
 
   const tone = color === "green" ? "green" : color === "yellow" ? "yellow" : "red";
 
   return (
-    <SectionCard title="4. Protecao Financeira" description="Monte uma reserva de emergencia equivalente a 6 meses da sua renda.">
+    <SectionCard
+      title="4. Protecao Financeira"
+      description="Monte uma reserva de emergencia equivalente a 6 meses da sua renda."
+      seal={{ icon: sealIcon, label: "Escudo" }}
+    >
       <label className="mb-field">
         <span>Reserva atual</span>
         <input

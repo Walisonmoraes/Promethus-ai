@@ -19,11 +19,17 @@ export function Step1PayYourself() {
     [state.currentSavings, state.monthlyIncome]
   );
   const projection = useMemo(() => getMonthlySavingsProjection(recommended), [recommended]);
+  const sealIcon = (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M12 4v16M6 10h12M8 14h8" />
+    </svg>
+  );
 
   return (
     <SectionCard
       title="1. Pague-se Primeiro"
       description="Reserve ao menos 10% da renda antes de qualquer outro gasto."
+      seal={{ icon: sealIcon, label: "Poupanca" }}
     >
       <div className="mb-row-2">
         <label className="mb-field">

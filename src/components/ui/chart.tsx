@@ -16,12 +16,14 @@ type ChartContainerProps = {
 };
 
 export function ChartContainer({ config = {}, className, children }: ChartContainerProps) {
+  type CSSVarStyle = React.CSSProperties & Record<`--color-${string}`, string>;
+
   const style = Object.entries(config).reduce((acc, [key, value]) => {
     if (value?.color) {
-      acc[`--color-${key}` as keyof React.CSSProperties] = value.color;
+      acc[`--color-${key}`] = value.color;
     }
     return acc;
-  }, {} as React.CSSProperties);
+  }, {} as CSSVarStyle);
 
   return (
     <div className={cn("chart-container", className)} style={style}>

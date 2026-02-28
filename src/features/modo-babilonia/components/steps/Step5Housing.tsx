@@ -17,9 +17,18 @@ export function Step5Housing() {
 
   const progress =
     state.downPaymentTarget > 0 ? (state.currentSavings / state.downPaymentTarget) * 100 : 0;
+  const sealIcon = (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M4 11 12 5l8 6M6 10v9h12v-9M10 19v-5h4v5" />
+    </svg>
+  );
 
   return (
-    <SectionCard title="5. Moradia Inteligente" description="Planeje entrada e prazo para compra do imovel com previsao de tempo.">
+    <SectionCard
+      title="5. Moradia Inteligente"
+      description="Planeje entrada e prazo para compra do imovel com previsao de tempo."
+      seal={{ icon: sealIcon, label: "Moradia" }}
+    >
       <div className="mb-row-3">
         <label className="mb-field">
           <span>Valor do imovel</span>
