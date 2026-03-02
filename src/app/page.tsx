@@ -1,6 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
+
+declare global {
+  interface Window {
+    webkitAudioContext?: typeof AudioContext;
+  }
+}
 import {
   ResponsiveContainer,
   LineChart,
@@ -876,7 +882,11 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
       }
       
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const AudioConstructor = window.AudioContext ?? window.webkitAudioContext;
+      if (!AudioConstructor) {
+        throw new Error("AudioContext is not supported in this browser.");
+      }
+      audioContextRef.current = new AudioConstructor();
       analyserRef.current = audioContextRef.current.createAnalyser();
       const source = audioContextRef.current.createMediaStreamSource(stream);
       source.connect(analyserRef.current);
@@ -1491,7 +1501,7 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
       });
       
       if (!response.ok) {
-        updateMessage(messageId, "Promethus AI esta indisponivel no momento.");
+        updateMessage(messageId, "Prometheus AI esta indisponível no momento.");
         return;
       }
       
@@ -1517,7 +1527,7 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
         reader.releaseLock();
       }
     } catch (error) {
-      updateMessage(messageId, "Promethus AI esta indisponivel no momento.");
+      updateMessage(messageId, "Prometheus AI esta indisponível no momento.");
     } finally {
       setIsTyping(false);
     }
@@ -1918,10 +1928,10 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
       <header className="header">
         <div className="brand">
           <div className="brand-mark brand-image" aria-hidden="true">
-            <img src="/logo.png" alt="Promethus AI logo" />
+            <img src="/logo.png" alt="Prometheus AI logo" />
           </div>
           <div>
-            <h1>Promethus AI</h1>
+            <h1>Prometheus AI</h1>
             <p>Seu copiloto para lancamentos financeiros com o poder da IA.</p>
           </div>
         </div>
@@ -2166,18 +2176,22 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
                   </div>
                   <div className="item-actions enhanced-item-actions">
                     <div className="goal-progress">
-                      <span className="progress-value">{item.progress}%</span>
                       <div className="progress-bar">
-                        <div 
+                        <div
                           className={`progress-fill ${
-                            item.progress >= 80 ? 'complete' : 
-                            item.progress >= 50 ? 'high' : 
-                            item.progress >= 25 ? 'medium' : 'low'
-                          }`} 
+                            item.progress >= 80
+                              ? "complete"
+                              : item.progress >= 50
+                                ? "high"
+                                : item.progress >= 25
+                                  ? "medium"
+                                  : "low"
+                          }`}
                           style={{ width: `${item.progress}%` }}
                         ></div>
                       </div>
                     </div>
+                    <span className="progress-value">{item.progress}%</span>
                     <div className="mini-actions enhanced-mini-actions">
                       <button
                         type="button"
@@ -2205,7 +2219,7 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
           </div>
 
           
-          <div className="card section-anchor" id="section-lancamentos">
+          <div className="card section-anchor history-card" id="section-lancamentos">
             <div className="card-header enhanced-header">
               <h2 className="section-title">Histórico de lançamentos</h2>
               <button
@@ -2557,26 +2571,8 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
             }}>
               <button
                 type="button"
-                className="attach-button"
-                style={{
-                  position: 'relative',
-                  zIndex: 2,
-                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(168, 85, 247, 0.1) 50%, rgba(59, 130, 246, 0.15) 100%)',
-                  border: '1px solid rgba(59, 130, 246, 0.1)',
-                  color: 'rgba(59, 130, 246, 0.6)',
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '12px',
-                  padding: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  textShadow: 'none',
-                  filter: 'brightness(1)',
-                  boxShadow: 'none'
-                }}
+                className="attach-button attach-button-gradient"
+                title="Anexar arquivo"
                 onClick={() => {
                   // Remover menu existente se houver
                   const existingMenu = document.querySelector('.attach-menu');
@@ -2672,23 +2668,6 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
                       }
                     });
                   }, 100);
-                }}
-                title="Anexar arquivo"
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#3b82f6',
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '8px',
-                  padding: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  textShadow: '0 0 5px rgba(59, 130, 246, 0.3)',
-                  filter: 'brightness(1.1)'
                 }}
               >
                 <i className="fa-solid fa-plus"></i>
