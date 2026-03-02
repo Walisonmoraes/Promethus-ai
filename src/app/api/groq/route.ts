@@ -8,12 +8,26 @@ export async function POST(req: Request) {
       return NextResponse.json({ text: "" }, { status: 400 });
     }
 
-    const response = await fetch("http://192.168.2.22:11434/api/generate", {
+    const apiKey = process.env.GROQ_API_KEY;
+    const apiUrl = process.env.GROQ_API_URL || "https://api.groq.com/openai/v1";
+
+    if (!apiKey) {
+      console.error("GROQ_API_KEY not configured");
+      return NextResponse.json({ text: "" }, { status: 500 });
+    }
+
+    const response = await fetch(`${apiUrl}/chat/completions`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
       body: JSON.stringify({
-        model: "llama3.1:8b",
-        prompt: `Voce e Promethus AI, um assistente financeiro claro, inteligente e confiavel.
+        model: "llama-3.1-8b-instant",
+        messages: [
+          {
+            role: "system",
+            content: `Voce e Promethus AI, um assistente financeiro claro, inteligente e confiavel.
 Inspirado na mitologia grega, voce representa o conhecimento que liberta, a visao de longo prazo e a capacidade de transformar decisoes em progresso.
 
 Seu papel e orientar o usuario a compreender melhor o dinheiro, ganhar autonomia financeira e construir um futuro mais seguro, sempre com clareza e responsabilidade.
@@ -35,25 +49,35 @@ Estilo Promethus AI:
 - Destaque consequencias, riscos e beneficios de forma clara
 - Sempre que fizer sentido, conclua com um convite a reflexao ou a um proximo passo
 
-Considere sempre a realidade financeira do usuario brasileiro.
-
-Usuario: ${prompt}`,
-        stream: false,
-        options: {
-          num_ctx: 2048,
-          num_predict: 256,
-          temperature: 0.7,
-        },
+Considere sempre a realidade financeira do usuario brasileiro.`
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 256,
       }),
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Groq API error:", response.status, response.statusText, errorText);
+      
+      if (response.status === 401) {
+        return NextResponse.json({ 
+          text: "⚠️ A API do Groq não está configurada corretamente. Verifique sua API key." 
+        }, { status: 500 });
+      }
+      
       return NextResponse.json({ text: "" }, { status: 500 });
     }
 
     const data = await response.json();
-    return NextResponse.json({ text: data?.response ?? "" });
-  } catch {
+    return NextResponse.json({ text: data?.choices?.[0]?.message?.content ?? "" });
+  } catch (error) {
+    console.error("Groq API error:", error);
     return NextResponse.json({ text: "" }, { status: 500 });
   }
 }

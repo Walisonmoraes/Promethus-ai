@@ -1,7 +1,6 @@
 "use client";
 
-import styles from "./page.module.css";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -400,44 +399,6 @@ const NAV_ITEMS: NavItem[] = [
 
 const START_MESSAGES_TEXTS: string[] = [];
 
-const QUICK_EXAMPLES_SETS: string[][] = [
-  [
-    "gastei 32 no Uber ontem a noite",
-    "paguei 189 no mercado no debito",
-    "recebi 4200 de salario hoje",
-    "gastei 68 no cinema com lanche",
-    "recebi 350 de freela por PIX",
-  ],
-  [
-    "paguei 240 de energia eletrica",
-    "gastei 97 na farmacia",
-    "recebi 180 de cashback do cartao",
-    "paguei 129 de internet fibra",
-    "recebi 950 de bonus do trabalho",
-  ],
-  [
-    "gastei 45 no almoco do trabalho",
-    "paguei 320 de combustivel",
-    "recebi 250 de venda de produto",
-    "gastei 79 em streaming e apps",
-    "recebi 120 de reembolso",
-  ],
-  [
-    "paguei 150 de academia mensal",
-    "gastei 220 em compras de casa",
-    "recebi 3000 de adiantamento",
-    "paguei 540 da parcela do cartao",
-    "recebi 430 de renda extra",
-  ],
-  [
-    "gastei 114 no ifood no fim de semana",
-    "paguei 82 de transporte publico",
-    "recebi 270 de juros de investimento",
-    "gastei 140 em roupas",
-    "recebi 1500 de cliente PJ",
-  ],
-];
-
 function getGoalCategory(text: string) {
   const lower = text.toLowerCase();
   if (lower.includes("viagem") || lower.includes("viajar")) return "Viagem";
@@ -835,7 +796,6 @@ function renderFormatted(text: string | { type: 'audio'; audioUrl: string; durat
 export default function Home() {  const [messages, setMessages] = useState<Message[]>([]);
   const [hasRotatedIntro, setHasRotatedIntro] = useState(false);
   const [shortcutSet, setShortcutSet] = useState(() => CHAT_SHORTCUT_POOL[0]);
-  const [quickExamples, setQuickExamples] = useState<string[]>(() => QUICK_EXAMPLES_SETS[0]);
   const [expenses, setExpenses] = useState<Expense[]>([
     {
       id: "1",
@@ -1036,16 +996,7 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
     );
   }, []);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const key = "prometheus-quick-examples-rotation";
-    const current = Number(window.localStorage.getItem(key) ?? "0");
-    const next = Number.isFinite(current) ? current + 1 : 1;
-    window.localStorage.setItem(key, String(next));
-    const setIndex = next % QUICK_EXAMPLES_SETS.length;
-    setQuickExamples(QUICK_EXAMPLES_SETS[setIndex]);
-  }, []);
-
+  
   const monthCloseKey = useMemo(() => {
     const now = new Date();
     return `month-close-${now.getFullYear()}-${now.getMonth() + 1}`;
@@ -1533,7 +1484,7 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
     
     try {
       const contextualPrompt = `Contexto: ${contextSummary}. Pergunta: ${prompt}`;
-      const response = await fetch("/api/ollama/stream", {
+      const response = await fetch("/api/groq/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: contextualPrompt }),
@@ -1574,7 +1525,7 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
 
   async function classifyCategory(text: string) {
     try {
-      const response = await fetch("/api/ollama/categorize", {
+      const response = await fetch("/api/groq/categorize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),
@@ -2032,68 +1983,134 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
             <span className="babilonia-subtext">7 principios financeiros</span>
           </button>
 
-          <div className="card menu-card">
-            <h2>Menu rapido</h2>
-            <div className="nav-list">
+          <div className="card menu-card enhanced-menu-card">
+            <div className="menu-header">
+              <h2 className="menu-title">Menu rápido</h2>
+              <div className="menu-subtitle">Navegue rapidamente</div>
+            </div>
+            <div className="nav-list enhanced-nav-list">
               {NAV_ITEMS.map((item) => (
                 <button
                   key={item.id}
                   type="button"
-                  className={`nav-item ${activeNav === item.id ? "nav-active" : ""}`}
+                  className={`nav-item enhanced-nav-item ${activeNav === item.id ? "nav-active" : ""}`}
                   onClick={() => handleNavClick(item.id)}
                 >
-                  <div>
-                    <strong>{item.label}</strong>
-                    <span>{item.detail}</span>
+                  <div className="nav-content">
+                    <div className="nav-icon">
+                      <div className="nav-icon-svg">
+                        {item.id === 'visao' && (
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 3v18h18" />
+                            <path d="M18 17V9" />
+                            <path d="M13 17V5" />
+                            <path d="M8 17v-3" />
+                          </svg>
+                        )}
+                        {item.id === 'lancamentos' && (
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect width="20" height="14" x="2" y="5" rx="2" />
+                            <line x1="2" x2="22" y1="10" y2="10" />
+                          </svg>
+                        )}
+                        {item.id === 'metas' && (
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                          </svg>
+                        )}
+                        {item.id === 'cartoes' && (
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect width="20" height="14" x="2" y="5" rx="2" />
+                            <line x1="2" x2="22" y1="10" y2="10" />
+                            <path d="M7 15h.01" />
+                            <path d="M17 15h.01" />
+                          </svg>
+                        )}
+                        {item.id === 'relatorios' && (
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 3v18h18" />
+                            <path d="M18 9l-5 5-3-3-4 4" />
+                          </svg>
+                        )}
+                        {item.id === 'categorias' && (
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M4 7h16" />
+                            <path d="M9 7v14" />
+                            <path d="M15 7v14" />
+                            <path d="M4 17h16" />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                    <div className="nav-text">
+                      <strong>{item.label}</strong>
+                      <span>{item.detail}</span>
+                    </div>
                   </div>
+                  <div className="nav-arrow">→</div>
                 </button>
               ))}
             </div>
           </div>
 
           <div className="card section-anchor" id="section-visao">
-            <h2>Resumo do mes</h2>
-            <div className="metric">
-              <span>Gastos do mes</span>
-              <strong>{currency.format(totals.spent)}</strong>
-              <span>Entradas</span>
-              <strong>{currency.format(totals.income)}</strong>
-              <span>Saldo</span>
-              <strong>{currency.format(totals.balance)}</strong>
+            <div className="card-header enhanced-header">
+              <h2 className="section-title">Resumo do mês</h2>
+            </div>
+            <div className="list enhanced-list">
+              <div className="list-item enhanced-list-item category-item" data-category="Gastos">
+                <div className="item-content">
+                  <strong className="item-title">Gastos do mês</strong>
+                </div>
+                <span className="item-value expense-value">{currency.format(totals.spent)}</span>
+              </div>
+              <div className="list-item enhanced-list-item category-item" data-category="Entradas">
+                <div className="item-content">
+                  <strong className="item-title">Entradas</strong>
+                </div>
+                <span className="item-value income-value">{currency.format(totals.income)}</span>
+              </div>
+              <div className="list-item enhanced-list-item category-item" data-category="Saldo">
+                <div className="item-content">
+                  <strong className="item-title">Saldo</strong>
+                </div>
+                <span className={`item-value ${totals.balance >= 0 ? 'income-value' : 'expense-value'}`}>{currency.format(totals.balance)}</span>
+              </div>
             </div>
           </div>
 
           <div className="card section-anchor" id="section-cartoes">
-            <div className="card-header">
-              <h2>Agenda financeira</h2>
+            <div className="card-header enhanced-header">
+              <h2 className="section-title">Agenda financeira</h2>
               <button
                 type="button"
-                className="icon-btn icon-add"
+                className="icon-btn icon-add enhanced-add-btn"
                 onClick={() => setModal({ type: "agenda" })}
               >
                 +
               </button>
             </div>
-            <div className="list">
+            <div className="list enhanced-list">
               {agendaItems.map((item) => (
-                <div key={item.id} className="list-item">
-                  <div>
-                    <strong>{item.title}</strong>
-                    <div>{item.due}</div>
+                <div key={item.id} className="list-item enhanced-list-item">
+                  <div className="item-content">
+                    <strong className="item-title">{item.title}</strong>
+                    <div className="item-due">{item.due}</div>
                   </div>
-                  <div className="item-actions">
-                    <span>{currency.format(item.amount)}</span>
-                    <div className="mini-actions">
+                  <div className="item-actions enhanced-item-actions">
+                    <span className="item-amount">{currency.format(item.amount)}</span>
+                    <div className="mini-actions enhanced-mini-actions">
                       <button
                         type="button"
-                        className="icon-btn icon-btn-sm"
+                        className="icon-btn icon-btn-sm edit-btn"
                         onClick={() => setModal({ type: "edit-agenda", id: item.id })}
                       >
                         ✎
                       </button>
                       <button
                         type="button"
-                        className="icon-btn icon-btn-sm icon-remove"
+                        className="icon-btn icon-btn-sm delete-btn"
                         onClick={() =>
                           setAgendaItems((current) =>
                             current.filter((entry) => entry.id !== item.id)
@@ -2110,15 +2127,19 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
           </div>
 
           <div className="card section-anchor" id="section-categorias">
-            <h2>Top categorias</h2>
-            <div className="list">
+            <div className="card-header enhanced-header">
+              <h2 className="section-title">Top categorias</h2>
+            </div>
+            <div className="list enhanced-list">
               {categoryTotals.length === 0 ? (
-                <p className="empty-state">Sem categorias ainda. Lance sua primeira despesa.</p>
+                <p className="empty-state enhanced-empty-state">Sem categorias ainda. Lance sua primeira despesa.</p>
               ) : (
                 categoryTotals.map(([category, total]) => (
-                  <div key={category} className="list-item">
-                    <strong>{category}</strong>
-                    <span>{currency.format(total)}</span>
+                  <div key={category} className="list-item enhanced-list-item category-item" data-category={category}>
+                    <div className="item-content">
+                      <strong className="item-title">{category}</strong>
+                    </div>
+                    <span className="item-value">{currency.format(total)}</span>
                   </div>
                 ))
               )}
@@ -2126,36 +2147,48 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
           </div>
 
           <div className="card section-anchor" id="section-metas">
-            <div className="card-header">
-              <h2>Metas do mes</h2>
+            <div className="card-header enhanced-header">
+              <h2 className="section-title">Metas do mês</h2>
               <button
                 type="button"
-                className="icon-btn icon-add"
+                className="icon-btn icon-add enhanced-add-btn"
                 onClick={() => setModal({ type: "meta" })}
               >
                 +
               </button>
             </div>
-            <div className="list">
+            <div className="list enhanced-list">
               {goalItems.map((item) => (
-                <div key={item.id} className="list-item">
-                  <div>
-                    <strong>{item.title}</strong>
-                    <div>{item.category} · Meta {currency.format(item.target)}</div>
+                <div key={item.id} className="list-item enhanced-list-item">
+                  <div className="item-content">
+                    <strong className="item-title">{item.title}</strong>
+                    <div className="item-due">{item.category} · Meta {currency.format(item.target)}</div>
                   </div>
-                  <div className="item-actions">
-                    <span>{item.progress}%</span>
-                    <div className="mini-actions">
+                  <div className="item-actions enhanced-item-actions">
+                    <div className="goal-progress">
+                      <span className="progress-value">{item.progress}%</span>
+                      <div className="progress-bar">
+                        <div 
+                          className={`progress-fill ${
+                            item.progress >= 80 ? 'complete' : 
+                            item.progress >= 50 ? 'high' : 
+                            item.progress >= 25 ? 'medium' : 'low'
+                          }`} 
+                          style={{ width: `${item.progress}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                    <div className="mini-actions enhanced-mini-actions">
                       <button
                         type="button"
-                        className="icon-btn icon-btn-sm"
+                        className="icon-btn icon-btn-sm edit-btn"
                         onClick={() => setModal({ type: "edit-meta", id: item.id })}
                       >
                         ✎
                       </button>
                       <button
                         type="button"
-                        className="icon-btn icon-btn-sm icon-remove"
+                        className="icon-btn icon-btn-sm delete-btn"
                         onClick={() =>
                           setGoalItems((current) =>
                             current.filter((entry) => entry.id !== item.id)
@@ -2171,65 +2204,43 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
             </div>
           </div>
 
-          <div className="card section-anchor quick-examples-card" id="section-relatorios">
-            <div className="quick-examples-head">
-              <h2>Exemplos rapidos</h2>
-              <p>Toque para preencher o chat com receitas e despesas reais do dia a dia.</p>
-            </div>
-            <div className="quick-examples-list">
-              {quickExamples.map((text) => {
-                const isIncome = /recebi|entrou|ganhei|bonus|reembolso|cashback|juros/i.test(text);
-                return (
-                  <button
-                    type="button"
-                    key={text}
-                    className={`quick-example-btn ${isIncome ? "is-income" : "is-expense"}`}
-                    onClick={() => {
-                      setInput(text);
-                    }}
-                  >
-                    <span className="quick-example-type">{isIncome ? "Receita" : "Despesa"}</span>
-                    <span className="quick-example-text">{text}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
+          
           <div className="card section-anchor" id="section-lancamentos">
-            <div className="card-header">
-              <h2>Historico de lancamentos</h2>
+            <div className="card-header enhanced-header">
+              <h2 className="section-title">Histórico de lançamentos</h2>
               <button
                 type="button"
-                className="icon-btn icon-add"
+                className="icon-btn icon-add enhanced-add-btn"
                 onClick={() => setModal({ type: "historico" })}
               >
                 +
               </button>
             </div>
-            <div className="list">
+            <div className="list enhanced-list">
               {recentExpenses.length === 0 ? (
-                <p className="empty-state">Nenhum lancamento recente.</p>
+                <p className="empty-state enhanced-empty-state">Nenhum lançamento recente.</p>
               ) : (
                 recentExpenses.map((expense) => (
-                  <div key={expense.id} className="list-item">
-                    <div>
-                      <strong>{expense.description}</strong>
-                      <div>{expense.category}</div>
+                  <div key={expense.id} className="list-item enhanced-list-item history-item" data-type={expense.kind}>
+                    <div className="item-content">
+                      <strong className="item-title">{expense.description}</strong>
+                      <div className="item-due">{expense.category}</div>
                     </div>
-                    <div className="item-actions">
-                      <div>{currency.format(expense.amount)}</div>
-                      <div className="mini-actions">
+                    <div className="item-actions enhanced-item-actions">
+                      <div className={`expense-amount ${expense.kind === 'income' ? 'income-amount' : 'expense-amount'}`}>
+                        {currency.format(expense.amount)}
+                      </div>
+                      <div className="mini-actions enhanced-mini-actions">
                         <button
                           type="button"
-                          className="icon-btn icon-btn-sm"
+                          className="icon-btn icon-btn-sm edit-btn"
                           onClick={() => setModal({ type: "edit-historico", id: expense.id })}
                         >
                           ✎
                         </button>
                         <button
                           type="button"
-                          className="icon-btn icon-btn-sm icon-remove"
+                          className="icon-btn icon-btn-sm delete-btn"
                           onClick={() =>
                             setExpenses((current) =>
                               current.filter((entry) => entry.id !== expense.id)
@@ -2389,12 +2400,11 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
             ) : null}
             {messages.length === 0 && !isTyping ? (
               <div className="chat-center" style={{ display: 'block', padding: '20px' }}>
-                <div className="chat-shortcuts chat-shortcuts-center">
-                  <p style={{ color: '#666', fontSize: '14px', marginBottom: '20px', textAlign: 'center' }}>
-                    Escolha uma opção abaixo ou digite sua despesa/receita
-                  </p>
-                  <div className="chat-shortcuts-grid icons-only">
-                    {shortcutSet.map((shortcut) => (
+                <p style={{ color: '#666', fontSize: '14px', marginBottom: '20px', textAlign: 'center' }}>
+                  Escolha uma opção abaixo ou digite sua despesa/receita
+                </p>
+                <div className="chat-shortcuts-grid icons-only">
+                  {shortcutSet.map((shortcut) => (
                       <button
                         key={shortcut.label}
                         type="button"
@@ -2404,14 +2414,115 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
                           setActiveChip(shortcut.chipId ?? null);
                           setShowDashboard(false);
                         }}
+                        title={shortcut.label}
                       >
                         <span className="chat-shortcut-icon" aria-hidden="true">
-                          {shortcut.icon}
+                          {shortcut.label === "Começar simples" && (
+                            <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+                              <path d="M12 2v20" />
+                              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H17" />
+                            </svg>
+                          )}
+                          {shortcut.label === "Receita salário" && (
+                            <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+                              <path d="M12 2v20" />
+                              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H17" />
+                            </svg>
+                          )}
+                          {shortcut.label === "Ver resumo" && (
+                            <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+                              <path d="M4 19h16" />
+                              <path d="M6 17V9" />
+                              <path d="M12 17V5" />
+                              <path d="M18 17v-7" />
+                            </svg>
+                          )}
+                          {shortcut.label === "Criar meta" && (
+                            <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+                              <circle cx="12" cy="12" r="9" />
+                              <circle cx="12" cy="12" r="4" />
+                              <path d="M12 3v2" />
+                            </svg>
+                          )}
+                          {shortcut.label === "Economizar" && (
+                            <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+                              <path d="M9 18h6" />
+                              <path d="M10 21h4" />
+                              <path d="M12 3a7 7 0 0 0-4 12c1 1 1 2 1 2h6s0-1 1-2a7 7 0 0 0-4-12z" />
+                            </svg>
+                          )}
+                          {shortcut.label === "Despesa mercado" && (
+                            <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+                              <path d="M12 2v20" />
+                              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H17" />
+                            </svg>
+                          )}
+                          {shortcut.label === "Conta luz" && (
+                            <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+                              <path d="M12 2v20" />
+                              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H17" />
+                            </svg>
+                          )}
+                          {shortcut.label === "Transporte" && (
+                            <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+                              <path d="M12 2v20" />
+                              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H17" />
+                            </svg>
+                          )}
+                          {shortcut.label === "Receita extra" && (
+                            <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+                              <path d="M12 2v20" />
+                              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H17" />
+                            </svg>
+                          )}
+                          {shortcut.label === "Planejar mes" && (
+                            <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+                              <path d="M3 12l7-7h7l4 4v7l-7 7-11-11z" />
+                              <path d="M16 8h.01" />
+                            </svg>
+                          )}
+                          {shortcut.label === "Meta viagem" && (
+                            <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+                              <circle cx="12" cy="12" r="9" />
+                              <circle cx="12" cy="12" r="4" />
+                              <path d="M12 3v2" />
+                            </svg>
+                          )}
+                          {shortcut.label === "Reserva emergência" && (
+                            <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+                              <path d="M12 3v18" />
+                              <path d="M7 7h10" />
+                              <path d="M7 17h10" />
+                            </svg>
+                          )}
+                          {shortcut.label === "Cortar gastos" && (
+                            <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+                              <path d="M3 17l6-6 4 4 8-8" />
+                              <path d="M21 8v8h-8" />
+                            </svg>
+                          )}
+                          {shortcut.label === "Investimento" && (
+                            <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+                              <path d="M12 2v20" />
+                              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H17" />
+                            </svg>
+                          )}
+                          {shortcut.label === "Cartão crédito" && (
+                            <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+                              <rect x="3" y="5" width="18" height="14" rx="3" />
+                              <path d="M3 10h18" />
+                            </svg>
+                          )}
+                          {!["Começar simples", "Receita salário", "Ver resumo", "Criar meta", "Economizar", "Despesa mercado", "Conta luz", "Transporte", "Receita extra", "Planejar mes", "Meta viagem", "Reserva emergência", "Cortar gastos", "Investimento", "Cartão crédito"].includes(shortcut.label) && (
+                            <svg viewBox="0 0 24 24" className="shortcut-icon" aria-hidden="true" fill="none" stroke="currentColor">
+                              <circle cx="12" cy="12" r="10" />
+                              <path d="M12 6v6l4 2" />
+                            </svg>
+                          )}
                         </span>
                         <span className="chat-shortcut-label">{shortcut.label}</span>
                       </button>
                     ))}
-                  </div>
                 </div>
               </div>
             ) : null}
