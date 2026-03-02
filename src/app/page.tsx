@@ -135,6 +135,19 @@ const CATEGORY_KEYWORDS: Array<[string, string[]]> = [
   ["Receita", ["salario", "freela", "bonus", "pix", "recebi", "ganhei"]],
 ];
 
+const DEPOSIT_KEYWORDS = [
+  "lancar",
+  "depositar",
+  "aplicar",
+  "adicionar",
+  "colocar",
+  "acrescentar",
+  "injetar",
+  "aportar",
+];
+
+const DEPOSIT_KEYWORD_REGEX = new RegExp(`(?:${DEPOSIT_KEYWORDS.join("|")})\\s+(\\d+[\\.,]?\\d*)`, "i");
+
 const CHAT_SHORTCUTS: Array<{
   label: string;
   text: string;
@@ -458,6 +471,45 @@ function parseExpense(input: string): Expense | null {
     kind: isIncome ? "income" : "expense",
     createdAt: Date.now(),
   };
+}
+
+function extractGoalHint(text: string) {
+  const match = text.match(/meta\s+([^0-9]+)/i);
+  if (!match) return undefined;
+  return match[1].trim().replace(/(para|de|com|no|na|por|mensal|mes)\s*$/i, "").trim();
+}
+
+function parseGoalDepositCommand(text: string) {
+  const match = DEPOSIT_KEYWORD_REGEX.exec(text);
+  if (!match) return null;
+  const amount = Number.parseFloat(match[1].replace(".", "").replace(",", "."));
+  if (Number.isNaN(amount) || amount <= 0) return null;
+  return {
+    amount,
+    goalHint: extractGoalHint(text),
+  };
+}
+
+function findGoalForDeposit(goalHint: string | undefined, text: string, goals: GoalItem[]) {
+  const normalizedText = text.toLowerCase();
+  if (goalHint) {
+    const normalizedHint = goalHint.toLowerCase();
+    const byTitle = goals.find((goal) => goal.title.toLowerCase().includes(normalizedHint));
+    if (byTitle) return byTitle;
+    const byCategory = goals.find((goal) => goal.category.toLowerCase().includes(normalizedHint));
+    if (byCategory) return byCategory;
+  }
+
+  const byMention = goals.find((goal) => normalizedText.includes(goal.title.toLowerCase()));
+  if (byMention) return byMention;
+
+  const categoryHint = getGoalCategory(text);
+  const byCategoryHint = goals.find(
+    (goal) => goal.category.toLowerCase() === categoryHint.toLowerCase()
+  );
+  if (byCategoryHint) return byCategoryHint;
+
+  return null;
 }
 
 function buildAssistantReply(expense: Expense): string {
@@ -1568,33 +1620,28 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
     pushMessage("user", messageText);
 
     const lower = clean.toLowerCase();
-    const goalAmountMatch = lower.match(/(?:meta|aporte|adicionar|aplicar)\\s*(\\d+[\\.,]?\\d*)/);
-    if (goalAmountMatch && (lower.includes("meta") || lower.includes("aporte") || lower.includes("aplicar"))) {
-      const value = Number.parseFloat(goalAmountMatch[1].replace(".", "").replace(",", "."));
-      if (Number.isNaN(value)) {
-        pushMessage("assistant", "Nao identifiquei o valor do aporte.");
-        return;
-      }
-      const nameMatch = clean.match(/meta\\s+(.+)/i);
-      const goalName = nameMatch ? nameMatch[1] : "";
-      const targetGoal = goalName
-        ? goalItems.find((goal) => goal.title.toLowerCase().includes(goalName.toLowerCase()))
-        : goalItems[0];
+    const depositCommand = parseGoalDepositCommand(clean);
+    if (depositCommand) {
+      const targetGoal = findGoalForDeposit(depositCommand.goalHint, clean, goalItems);
       if (!targetGoal) {
-        pushMessage("assistant", "Nao encontrei uma meta para aplicar esse valor.");
+        pushMessage(
+          "assistant",
+          "Nao identifiquei a meta que voce quer abastecer. Me diga o nome ou categoria da meta."
+        );
         return;
       }
+      const savedSoFar = (targetGoal.progress / 100) * targetGoal.target;
+      const nextSaved = Math.min(savedSoFar + depositCommand.amount, targetGoal.target);
+      const nextProgress = Math.min(Math.round((nextSaved / targetGoal.target) * 100), 100);
+
       setGoalItems((current) =>
-        current.map((goal) => {
-          if (goal.id !== targetGoal.id) return goal;
-          const saved = (goal.progress / 100) * goal.target + value;
-          const nextProgress = Math.min(Math.round((saved / goal.target) * 100), 100);
-          return { ...goal, progress: nextProgress };
-        })
+        current.map((goal) =>
+          goal.id !== targetGoal.id ? goal : { ...goal, progress: nextProgress }
+        )
       );
       const goalExpense: Expense = {
         id: `${Date.now()}-${Math.random()}`,
-        amount: value,
+        amount: depositCommand.amount,
         category: "Metas",
         description: `Aporte meta: ${targetGoal.title}`,
         date: shortDate.format(new Date()),
@@ -1604,8 +1651,10 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
       setExpenses((current) => [goalExpense, ...current]);
       pushMessage(
         "assistant",
-        `Aporte de ${currency.format(value)} aplicado na meta ${targetGoal.title}. Progresso atualizado e registrado como gasto.`
+        `Aporte de ${currency.format(depositCommand.amount)} registrado em ${targetGoal.title} (Progresso: ${nextProgress}%).`
       );
+      setGoalMode(false);
+      setPendingGoal(null);
       return;
     }
     if (lower.includes("desfazer ultimo") || lower.includes("desfazer último")) {
@@ -2241,7 +2290,9 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
                       <div className="item-due">{expense.category}</div>
                     </div>
                     <div className="item-actions enhanced-item-actions">
-                      <div className={`expense-amount ${expense.kind === 'income' ? 'income-amount' : 'expense-amount'}`}>
+                      <div
+                        className={`history-amount ${expense.kind === "income" ? "income-amount" : "expense-amount"}`}
+                      >
                         {currency.format(expense.amount)}
                       </div>
                       <div className="mini-actions enhanced-mini-actions">
