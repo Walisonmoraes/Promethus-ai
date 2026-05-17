@@ -1,0 +1,25 @@
+# fly.toml app configuration file generated for prometheus-ai on 2026-05-03T23:21:09-04:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'prometheus-ai'
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  max_machines_running = 1
+
+[vm]
+  cpu = "shared"
+  memory = "512mb"

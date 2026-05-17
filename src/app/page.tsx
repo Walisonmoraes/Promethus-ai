@@ -1,6 +1,55 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
+import UserHeader from "@/components/UserHeader";
+
+// Função para salvar transações no Supabase
+const saveTransactionToSupabase = async (expense: any) => {
+  try {
+    const response = await fetch('/api/transactions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        amount: expense.amount,
+        category: expense.category,
+        description: expense.description,
+        kind: expense.kind,
+        date: expense.date || new Date().toISOString().split('T')[0]
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      console.error('Failed to save transaction to Supabase:', response.status, errorData);
+      return null;
+    }
+
+    const data = await response.json();
+    return data.transaction;
+  } catch (error) {
+    console.error('Error saving transaction:', error);
+    return null;
+  }
+};
+
+// Função para carregar transações do Supabase
+const loadTransactionsFromSupabase = async () => {
+  try {
+    const response = await fetch('/api/transactions');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      console.error('Failed to load transactions from Supabase:', response.status, errorData);
+      return [];
+    }
+    const data = await response.json();
+    return data.transactions || [];
+  } catch (error) {
+    console.error('Error loading transactions:', error);
+    return [];
+  }
+};
 
 declare global {
   interface Window {
@@ -467,7 +516,7 @@ function parseExpense(input: string): Expense | null {
     amount,
     category: category ?? "Outros",
     description: description.trim(),
-    date: shortDate.format(new Date()),
+    date: new Date().toISOString().split('T')[0],
     kind: isIncome ? "income" : "expense",
     createdAt: Date.now(),
   };
@@ -854,53 +903,7 @@ function renderFormatted(text: string | { type: 'audio'; audioUrl: string; durat
 export default function Home() {  const [messages, setMessages] = useState<Message[]>([]);
   const [hasRotatedIntro, setHasRotatedIntro] = useState(false);
   const [shortcutSet, setShortcutSet] = useState(() => CHAT_SHORTCUT_POOL[0]);
-  const [expenses, setExpenses] = useState<Expense[]>([
-    {
-      id: "1",
-      amount: 240,
-      category: "Moradia",
-      description: "paguei 240 de energia eletrica",
-      date: shortDate.format(new Date()),
-      kind: "expense",
-      createdAt: Date.now() - 86400000,
-    },
-    {
-      id: "2", 
-      amount: 97,
-      category: "Saude",
-      description: "gastei 97 na farmacia",
-      date: shortDate.format(new Date()),
-      kind: "expense",
-      createdAt: Date.now() - 172800000,
-    },
-    {
-      id: "3",
-      amount: 180,
-      category: "Receita", 
-      description: "recebi 180 de cashback do cartao",
-      date: shortDate.format(new Date()),
-      kind: "income",
-      createdAt: Date.now() - 259200000,
-    },
-    {
-      id: "4",
-      amount: 129,
-      category: "Moradia",
-      description: "paguei 129 de internet fibra",
-      date: shortDate.format(new Date()),
-      kind: "expense", 
-      createdAt: Date.now() - 345600000,
-    },
-    {
-      id: "5",
-      amount: 950,
-      category: "Receita",
-      description: "recebi 950 de bonus do trabalho",
-      date: shortDate.format(new Date()),
-      kind: "income",
-      createdAt: Date.now() - 432000000,
-    },
-  ]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [pendingExpense, setPendingExpense] = useState<Expense | null>(null);
   const [pendingGoal, setPendingGoal] = useState<GoalDraft | null>(null);
   const [isTyping, setIsTyping] = useState(false);
@@ -1011,16 +1014,8 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
   const [activeNav, setActiveNav] = useState<NavId>("visao");
   const [goalMode, setGoalMode] = useState(false);
   const [chatMax, setChatMax] = useState(false);
-  const [agendaItems, setAgendaItems] = useState<AgendaItem[]>([
-    { id: "ag-1", title: "Cartao Nubank", due: "Vence em 6 dias", amount: 1240 },
-    { id: "ag-2", title: "Aluguel", due: "Vence em 10 dias", amount: 1800 },
-    { id: "ag-3", title: "Internet", due: "Vence em 12 dias", amount: 110 },
-  ]);
-  const [goalItems, setGoalItems] = useState<GoalItem[]>([
-    { id: "g-1", title: "Viagem", category: "Viagem", target: 6000, progress: 42 },
-    { id: "g-2", title: "Reserva de emergencia", category: "Reserva de emergencia", target: 12000, progress: 38 },
-    { id: "g-3", title: "Casa", category: "Outros", target: 25000, progress: 22 },
-  ]);
+  const [agendaItems, setAgendaItems] = useState<AgendaItem[]>([]);
+  const [goalItems, setGoalItems] = useState<GoalItem[]>([]);
   const [newAgenda, setNewAgenda] = useState({ title: "", due: "", amount: "" });
   const [newGoal, setNewGoal] = useState({
     title: "",
@@ -1033,6 +1028,7 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
     category: "",
     amount: "",
     kind: "expense" as "expense" | "income",
+    date: "",
   });
   const [modal, setModal] = useState<null | { type: ModalType; id?: string }>(null);
   const [babiloniaMax, setBabiloniaMax] = useState(false);
@@ -1077,6 +1073,16 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
     if (!node) return;
     node.scrollTo({ top: node.scrollHeight, behavior: "smooth" });
   }, [messages, isTyping]);
+
+  useEffect(() => {
+    const loadTransactions = async () => {
+      const transactions = await loadTransactionsFromSupabase();
+      if (transactions.length > 0) {
+        setExpenses(transactions);
+      }
+    };
+    loadTransactions();
+  }, []);
 
   const totals = useMemo(() => {
     const income = expenses
@@ -1639,16 +1645,20 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
           goal.id !== targetGoal.id ? goal : { ...goal, progress: nextProgress }
         )
       );
-      const goalExpense: Expense = {
-        id: `${Date.now()}-${Math.random()}`,
+      const goalExpense = {
+        id: `${Date.now()}-goal-${targetGoal.id}`,
         amount: depositCommand.amount,
-        category: "Metas",
-        description: `Aporte meta: ${targetGoal.title}`,
-        date: shortDate.format(new Date()),
-        kind: "expense",
+        category: "Aporte em meta",
+        description: `Aporte em ${targetGoal.title}`,
+        date: new Date().toISOString().split('T')[0],
+        kind: "expense" as const,
         createdAt: Date.now(),
       };
       setExpenses((current) => [goalExpense, ...current]);
+      
+      // Salvar no Supabase
+      saveTransactionToSupabase(goalExpense);
+      
       pushMessage(
         "assistant",
         `Aporte de ${currency.format(depositCommand.amount)} registrado em ${targetGoal.title} (Progresso: ${nextProgress}%).`
@@ -1883,6 +1893,10 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
     }
 
     setExpenses((current) => [finalExpense, ...current]);
+    
+    // Salvar no Supabase
+    saveTransactionToSupabase(finalExpense);
+    
     pushMessage("assistant", buildAssistantReply(finalExpense));
     pushMessage("assistant", buildImpactNote(finalExpense, totals, goalItems));
     setPendingExpense(null);
@@ -2006,6 +2020,7 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
             Resumo do mes
           </button>
         </div>
+        <UserHeader />
       </header>
 
       <div className="content">
@@ -2406,6 +2421,10 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
                           if (action.action === "save") {
                             if (!pendingExpense || pendingExpense.id !== action.expenseId) return;
                             setExpenses((current) => [pendingExpense, ...current]);
+                            
+                            // Salvar no Supabase
+                            saveTransactionToSupabase(pendingExpense);
+                            
                             pushMessage("assistant", buildAssistantReply(pendingExpense));
                           }
                           if (action.action === "save-goal") {
@@ -4047,23 +4066,25 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
                     className="btn-primary"
                     onClick={() => {
                       if (!newHistory.description || !newHistory.amount) return;
-                      setExpenses((current) => [
-                        {
-                          id: `${Date.now()}-${Math.random()}-h`,
-                          amount: Number(newHistory.amount || 0),
-                          category: newHistory.category || "Outros",
-                          description: newHistory.description,
-                          date: shortDate.format(new Date()),
-                          kind: newHistory.kind,
-                          createdAt: Date.now(),
-                        },
-                        ...current,
-                      ]);
-                      setNewHistory({ description: "", category: "", amount: "", kind: "expense" });
+                      const newTransaction = {
+                        id: `${Date.now()}-${Math.random()}-h`,
+                        amount: Number(newHistory.amount || 0),
+                        category: newHistory.category,
+                        description: newHistory.description,
+                        date: newHistory.date || new Date().toISOString().split('T')[0],
+                        kind: newHistory.kind as "expense" | "income",
+                        createdAt: Date.now(),
+                      };
+                      setExpenses((current) => [newTransaction, ...current]);
+                      
+                      // Salvar no Supabase
+                      saveTransactionToSupabase(newTransaction);
+                      
+                      setNewHistory({ description: "", amount: "", category: "", kind: "expense", date: "" });
                       setModal(null);
                     }}
                   >
-                    Adicionar
+                    Salvar
                   </button>
                 </div>
               </>
