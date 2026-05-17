@@ -99,3 +99,47 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session?.user?.email) {
+      console.error('No session or email found')
+      return NextResponse.json({ error: 'Unauthorized - No session' }, { status: 401 })
+    }
+
+    const userId = session.user.email
+    const { searchParams } = new URL(request.url)
+    const transactionId = searchParams.get('id')
+
+    if (!transactionId) {
+      return NextResponse.json({ error: 'Missing transaction id' }, { status: 400 })
+    }
+
+    console.log('Deleting transaction for user:', userId, 'transactionId:', transactionId)
+
+    if (!supabaseAdmin) {
+      console.error('Supabase admin client not initialized')
+      return NextResponse.json({ error: 'Database not configured' }, { status: 500 })
+    }
+
+    const { error } = await supabaseAdmin
+      .from('transactions')
+      .delete()
+      .eq('id', transactionId)
+      .eq('user_id', userId)
+
+    if (error) {
+      console.error('Error deleting transaction:', error)
+      console.error('Error details:', JSON.stringify(error, null, 2))
+      return NextResponse.json({ error: 'Failed to delete transaction', details: error.message }, { status: 500 })
+    }
+
+    console.log('Transaction deleted successfully')
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Server error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
