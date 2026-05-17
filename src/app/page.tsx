@@ -34,6 +34,29 @@ const saveTransactionToSupabase = async (expense: any) => {
   }
 };
 
+// Função para deletar transações do Supabase
+const deleteTransactionFromSupabase = async (transactionId: string) => {
+  try {
+    const response = await fetch(`/api/transactions?id=${transactionId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      console.error('Failed to delete transaction from Supabase:', response.status, errorData);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error deleting transaction:', error);
+    return false;
+  }
+};
+
 // Função para carregar transações do Supabase
 const loadTransactionsFromSupabase = async () => {
   try {
@@ -2321,11 +2344,14 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
                         <button
                           type="button"
                           className="icon-btn icon-btn-sm delete-btn"
-                          onClick={() =>
-                            setExpenses((current) =>
-                              current.filter((entry) => entry.id !== expense.id)
-                            )
-                          }
+                          onClick={async () => {
+                            const deleted = await deleteTransactionFromSupabase(expense.id);
+                            if (deleted) {
+                              setExpenses((current) =>
+                                current.filter((entry) => entry.id !== expense.id)
+                              );
+                            }
+                          }}
                         >
                           −
                         </button>
