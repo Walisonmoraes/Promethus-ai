@@ -2329,9 +2329,10 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
                 <button
                   type="button"
                   className="icon-btn icon-add enhanced-add-btn"
-                  onClick={() => setModal({ type: "historico" })}
+                  onClick={() => window.location.href = '/lancamentos'}
+                  title="Ver histórico completo"
                 >
-                  +
+                  📋
                 </button>
               </div>
             </div>
