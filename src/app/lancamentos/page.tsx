@@ -128,15 +128,31 @@ export default function LancamentosPage() {
       <div className="mb-shell">
         {/* Header */}
         <div className="mb-hero">
-          <button
-            onClick={() => router.push('/')}
-            className="text-[#d2ddff] hover:text-white mb-4 flex items-center gap-2 transition-colors"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-            Voltar
-          </button>
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={() => router.push('/')}
+              className="text-[#d2ddff] hover:text-white flex items-center gap-2 transition-colors"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+              Voltar
+            </button>
+            <button
+              type="button"
+              className="mb-btn"
+              title="Conectar banco"
+              style={{
+                background: 'linear-gradient(120deg, rgba(124, 92, 255, 0.6), rgba(59, 130, 246, 0.5))',
+                borderColor: 'rgba(124, 92, 255, 0.8)',
+                boxShadow: '0 0 20px rgba(124, 92, 255, 0.4)'
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+                <path d="M3 21h18M5 21V7l8-4 8 4v14M10 9h4M10 13h4M10 17h4" />
+              </svg>
+            </button>
+          </div>
           <p className="mb-kicker">Histórico Financeiro</p>
           <h1 className="mb-title">Lançamentos</h1>
           <p className="mb-subtitle">Todos os seus lançamentos financeiros em um só lugar</p>
