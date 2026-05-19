@@ -2321,16 +2321,6 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
                 <button
                   type="button"
                   className="icon-btn icon-add enhanced-add-btn"
-                  onClick={() => setModal({ type: "pluggy-connect" })}
-                  title="Conectar banco"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(124, 92, 255, 0.85)' }}>
-                    <path d="M3 21h18M5 21V7l8-4 8 4v14M10 9h4M10 13h4M10 17h4" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  className="icon-btn icon-add enhanced-add-btn"
                   onClick={() => window.location.href = '/lancamentos'}
                   title="Ver histórico completo"
                 >
