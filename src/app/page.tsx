@@ -2324,7 +2324,9 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
                   onClick={() => setModal({ type: "pluggy-connect" })}
                   title="Conectar banco"
                 >
-                  🏦
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(124, 92, 255, 0.85)' }}>
+                    <path d="M3 21h18M5 21V7l8-4 8 4v14M10 9h4M10 13h4M10 17h4" />
+                  </svg>
                 </button>
                 <button
                   type="button"
@@ -2332,7 +2334,10 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
                   onClick={() => window.location.href = '/lancamentos'}
                   title="Ver histórico completo"
                 >
-                  📋
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(57, 208, 255, 0.85)' }}>
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+                  </svg>
                 </button>
               </div>
             </div>
