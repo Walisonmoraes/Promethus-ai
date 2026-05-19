@@ -116,82 +116,122 @@ export default function LancamentosPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
         <div className="text-white text-xl">Carregando...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="app" style={{ background: 'var(--bg)' }}>
+      <div className="layout">
         {/* Header */}
-        <div className="mb-8">
-          <button
-            onClick={() => router.push('/')}
-            className="text-white/70 hover:text-white mb-4 flex items-center gap-2 transition-colors"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-            Voltar
-          </button>
-          <h1 className="text-4xl font-bold text-white mb-2">Histórico de Lançamentos</h1>
-          <p className="text-white/70">Todos os seus lançamentos financeiros</p>
+        <div className="header">
+          <div>
+            <button
+              onClick={() => router.push('/')}
+              className="text-white/70 hover:text-white flex items-center gap-2 transition-colors"
+              style={{ fontSize: '14px' }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+              Voltar
+            </button>
+            <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: 'var(--ink)', marginTop: '8px' }}>
+              Histórico de Lançamentos
+            </h1>
+            <p style={{ color: 'var(--ink-soft)', fontSize: '14px', marginTop: '4px' }}>
+              Todos os seus lançamentos financeiros
+            </p>
+          </div>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-            <div className="text-white/70 text-sm mb-1">Receitas</div>
-            <div className="text-2xl font-bold text-green-400">{currency.format(totals.income)}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+          <div className="card" style={{ background: 'var(--panel)', borderRadius: 'var(--radius-lg)', padding: '24px', border: '1px solid var(--line)' }}>
+            <div style={{ color: 'var(--ink-soft)', fontSize: '13px', marginBottom: '8px' }}>Receitas</div>
+            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#4ade80' }}>{currency.format(totals.income)}</div>
           </div>
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-            <div className="text-white/70 text-sm mb-1">Despesas</div>
-            <div className="text-2xl font-bold text-red-400">{currency.format(totals.expense)}</div>
+          <div className="card" style={{ background: 'var(--panel)', borderRadius: 'var(--radius-lg)', padding: '24px', border: '1px solid var(--line)' }}>
+            <div style={{ color: 'var(--ink-soft)', fontSize: '13px', marginBottom: '8px' }}>Despesas</div>
+            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f87171' }}>{currency.format(totals.expense)}</div>
           </div>
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-            <div className="text-white/70 text-sm mb-1">Saldo</div>
-            <div className={`text-2xl font-bold ${totals.balance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+          <div className="card" style={{ background: 'var(--panel)', borderRadius: 'var(--radius-lg)', padding: '24px', border: '1px solid var(--line)' }}>
+            <div style={{ color: 'var(--ink-soft)', fontSize: '13px', marginBottom: '8px' }}>Saldo</div>
+            <div style={{ fontSize: '24px', fontWeight: 'bold', color: totals.balance >= 0 ? '#4ade80' : '#f87171' }}>
               {currency.format(totals.balance)}
             </div>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20 mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
+        <div className="card" style={{ background: 'var(--panel)', borderRadius: 'var(--radius-lg)', padding: '20px', border: '1px solid var(--line)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
               <input
                 type="text"
                 placeholder="Buscar por descrição ou categoria..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                style={{
+                  width: '100%',
+                  background: 'var(--panel-2)',
+                  border: '1px solid var(--line)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '12px 16px',
+                  color: 'var(--ink)',
+                  fontSize: '14px',
+                  outline: 'none',
+                }}
               />
             </div>
-            <div className="flex gap-2">
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <button
                 onClick={() => setFilter('all')}
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  filter === 'all' ? 'bg-purple-600 text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'
-                }`}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: 'var(--radius-md)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  background: filter === 'all' ? 'var(--accent)' : 'var(--panel-2)',
+                  color: 'var(--ink)',
+                  transition: 'all 0.2s ease',
+                }}
               >
                 Todos
               </button>
               <button
                 onClick={() => setFilter('income')}
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  filter === 'income' ? 'bg-green-600 text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'
-                }`}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: 'var(--radius-md)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  background: filter === 'income' ? '#4ade80' : 'var(--panel-2)',
+                  color: 'var(--ink)',
+                  transition: 'all 0.2s ease',
+                }}
               >
                 Receitas
               </button>
               <button
                 onClick={() => setFilter('expense')}
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  filter === 'expense' ? 'bg-red-600 text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'
-                }`}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: 'var(--radius-md)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  background: filter === 'expense' ? '#f87171' : 'var(--panel-2)',
+                  color: 'var(--ink)',
+                  transition: 'all 0.2s ease',
+                }}
               >
                 Despesas
               </button>
@@ -199,89 +239,105 @@ export default function LancamentosPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '24px' }}>
           {/* Transactions List */}
-          <div className="lg:col-span-2">
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 overflow-hidden">
-              <div className="p-4 border-b border-white/20">
-                <h2 className="text-xl font-semibold text-white">
-                  {filteredTransactions.length} lançamento{filteredTransactions.length !== 1 ? 's' : ''}
-                </h2>
-              </div>
-              <div className="divide-y divide-white/10">
-                {filteredTransactions.length === 0 ? (
-                  <div className="p-8 text-center text-white/50">
-                    Nenhum lançamento encontrado
-                  </div>
-                ) : (
-                  filteredTransactions.map((transaction) => (
-                    <div
-                      key={transaction.id}
-                      className="p-4 hover:bg-white/5 transition-colors flex items-center justify-between"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-2 h-2 rounded-full ${
-                            transaction.kind === 'income' ? 'bg-green-400' : 'bg-red-400'
-                          }`} />
-                          <div>
-                            <div className="text-white font-medium">{transaction.description}</div>
-                            <div className="text-white/60 text-sm">
-                              {transaction.category} · {shortDate.format(new Date(transaction.date))}
-                            </div>
+          <div className="card" style={{ background: 'var(--panel)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--line)', overflow: 'hidden' }}>
+            <div style={{ padding: '20px', borderBottom: '1px solid var(--line)' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--ink)' }}>
+                {filteredTransactions.length} lançamento{filteredTransactions.length !== 1 ? 's' : ''}
+              </h2>
+            </div>
+            <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+              {filteredTransactions.length === 0 ? (
+                <div style={{ padding: '32px', textAlign: 'center', color: 'var(--ink-soft)' }}>
+                  Nenhum lançamento encontrado
+                </div>
+              ) : (
+                filteredTransactions.map((transaction) => (
+                  <div
+                    key={transaction.id}
+                    style={{
+                      padding: '16px 20px',
+                      borderBottom: '1px solid var(--line)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      transition: 'background 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--panel-2)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{
+                          width: '8px',
+                          height: '8px',
+                          borderRadius: '50%',
+                          background: transaction.kind === 'income' ? '#4ade80' : '#f87171'
+                        }} />
+                        <div>
+                          <div style={{ color: 'var(--ink)', fontWeight: '500', fontSize: '14px' }}>{transaction.description}</div>
+                          <div style={{ color: 'var(--ink-soft)', fontSize: '12px', marginTop: '2px' }}>
+                            {transaction.category} · {shortDate.format(new Date(transaction.date))}
                           </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className={`text-right ${
-                          transaction.kind === 'income' ? 'text-green-400' : 'text-red-400'
-                        }`}>
-                          <div className="font-semibold">
-                            {transaction.kind === 'income' ? '+' : '-'}{currency.format(transaction.amount)}
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => deleteTransaction(transaction.id)}
-                          className="text-white/50 hover:text-red-400 transition-colors p-2"
-                          title="Excluir"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-                          </svg>
-                        </button>
                       </div>
                     </div>
-                  ))
-                )}
-              </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <div style={{ textAlign: 'right', color: transaction.kind === 'income' ? '#4ade80' : '#f87171' }}>
+                        <div style={{ fontWeight: '600', fontSize: '15px' }}>
+                          {transaction.kind === 'income' ? '+' : '-'}{currency.format(transaction.amount)}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => deleteTransaction(transaction.id)}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: 'var(--ink-soft)',
+                          cursor: 'pointer',
+                          padding: '4px',
+                          borderRadius: 'var(--radius-sm)',
+                          transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.background = 'rgba(248, 113, 113, 0.1)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--ink-soft)'; e.currentTarget.style.background = 'transparent'; }}
+                        title="Excluir"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
           {/* Category Summary */}
-          <div>
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 overflow-hidden">
-              <div className="p-4 border-b border-white/20">
-                <h2 className="text-xl font-semibold text-white">Resumo por Categoria</h2>
-              </div>
-              <div className="divide-y divide-white/10">
-                {categoryTotals.length === 0 ? (
-                  <div className="p-8 text-center text-white/50">
-                    Sem dados
-                  </div>
-                ) : (
-                  categoryTotals.map((item) => (
-                    <div key={item.category} className="p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="text-white font-medium">{item.category}</div>
-                        <div className="text-white font-semibold">{currency.format(item.total)}</div>
-                      </div>
-                      <div className="text-white/60 text-sm">
-                        {item.count} lançamento{item.count !== 1 ? 's' : ''} · média {currency.format(item.avg)}
-                      </div>
+          <div className="card" style={{ background: 'var(--panel)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--line)', overflow: 'hidden' }}>
+            <div style={{ padding: '20px', borderBottom: '1px solid var(--line)' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--ink)' }}>Resumo por Categoria</h2>
+            </div>
+            <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+              {categoryTotals.length === 0 ? (
+                <div style={{ padding: '32px', textAlign: 'center', color: 'var(--ink-soft)' }}>
+                  Sem dados
+                </div>
+              ) : (
+                categoryTotals.map((item) => (
+                  <div key={item.category} style={{ padding: '16px 20px', borderBottom: '1px solid var(--line)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <div style={{ color: 'var(--ink)', fontWeight: '500', fontSize: '14px' }}>{item.category}</div>
+                      <div style={{ color: 'var(--ink)', fontWeight: '600', fontSize: '15px' }}>{currency.format(item.total)}</div>
                     </div>
-                  ))
-                )}
-              </div>
+                    <div style={{ color: 'var(--ink-soft)', fontSize: '12px' }}>
+                      {item.count} lançamento{item.count !== 1 ? 's' : ''} · média {currency.format(item.avg)}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
