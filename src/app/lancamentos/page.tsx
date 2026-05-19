@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import "@/features/modo-babilonia/modo-babilonia.css";
 
 const currency = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -116,197 +117,122 @@ export default function LancamentosPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+      <div className="mb-page flex items-center justify-center">
         <div className="text-white text-xl">Carregando...</div>
       </div>
     );
   }
 
   return (
-    <div className="app" style={{ background: 'var(--bg)' }}>
-      <div className="layout">
+    <div className="mb-page">
+      <div className="mb-shell">
         {/* Header */}
-        <div className="header">
-          <div>
-            <button
-              onClick={() => router.push('/')}
-              className="text-white/70 hover:text-white flex items-center gap-2 transition-colors"
-              style={{ fontSize: '14px' }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-              Voltar
-            </button>
-            <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: 'var(--ink)', marginTop: '8px' }}>
-              Histórico de Lançamentos
-            </h1>
-            <p style={{ color: 'var(--ink-soft)', fontSize: '14px', marginTop: '4px' }}>
-              Todos os seus lançamentos financeiros
-            </p>
-          </div>
+        <div className="mb-hero">
+          <button
+            onClick={() => router.push('/')}
+            className="text-[#d2ddff] hover:text-white mb-4 flex items-center gap-2 transition-colors"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            Voltar
+          </button>
+          <p className="mb-kicker">Histórico Financeiro</p>
+          <h1 className="mb-title">Lançamentos</h1>
+          <p className="mb-subtitle">Todos os seus lançamentos financeiros em um só lugar</p>
         </div>
 
         {/* Summary Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
-          <div className="card" style={{ background: 'var(--panel)', borderRadius: 'var(--radius-lg)', padding: '24px', border: '1px solid var(--line)' }}>
-            <div style={{ color: 'var(--ink-soft)', fontSize: '13px', marginBottom: '8px' }}>Receitas</div>
-            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#4ade80' }}>{currency.format(totals.income)}</div>
+        <div className="mb-game-strip">
+          <div className="mb-game-card">
+            <span>Receitas</span>
+            <strong className="text-[#c3f3d2]">{currency.format(totals.income)}</strong>
           </div>
-          <div className="card" style={{ background: 'var(--panel)', borderRadius: 'var(--radius-lg)', padding: '24px', border: '1px solid var(--line)' }}>
-            <div style={{ color: 'var(--ink-soft)', fontSize: '13px', marginBottom: '8px' }}>Despesas</div>
-            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f87171' }}>{currency.format(totals.expense)}</div>
+          <div className="mb-game-card">
+            <span>Despesas</span>
+            <strong className="text-[#ffd2dc]">{currency.format(totals.expense)}</strong>
           </div>
-          <div className="card" style={{ background: 'var(--panel)', borderRadius: 'var(--radius-lg)', padding: '24px', border: '1px solid var(--line)' }}>
-            <div style={{ color: 'var(--ink-soft)', fontSize: '13px', marginBottom: '8px' }}>Saldo</div>
-            <div style={{ fontSize: '24px', fontWeight: 'bold', color: totals.balance >= 0 ? '#4ade80' : '#f87171' }}>
+          <div className="mb-game-card">
+            <span>Saldo</span>
+            <strong className={totals.balance >= 0 ? 'text-[#c3f3d2]' : 'text-[#ffd2dc]'}>
               {currency.format(totals.balance)}
-            </div>
+            </strong>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="card" style={{ background: 'var(--panel)', borderRadius: 'var(--radius-lg)', padding: '20px', border: '1px solid var(--line)' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
+        <div className="mb-card">
+          <div className="mb-row-2">
+            <div className="mb-field">
+              <span>Buscar</span>
               <input
                 type="text"
-                placeholder="Buscar por descrição ou categoria..."
+                placeholder="Descrição ou categoria..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{
-                  width: '100%',
-                  background: 'var(--panel-2)',
-                  border: '1px solid var(--line)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: '12px 16px',
-                  color: 'var(--ink)',
-                  fontSize: '14px',
-                  outline: 'none',
-                }}
+                className="mb-input"
               />
             </div>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <button
-                onClick={() => setFilter('all')}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: 'var(--radius-md)',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  background: filter === 'all' ? 'var(--accent)' : 'var(--panel-2)',
-                  color: 'var(--ink)',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                Todos
-              </button>
-              <button
-                onClick={() => setFilter('income')}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: 'var(--radius-md)',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  background: filter === 'income' ? '#4ade80' : 'var(--panel-2)',
-                  color: 'var(--ink)',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                Receitas
-              </button>
-              <button
-                onClick={() => setFilter('expense')}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: 'var(--radius-md)',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  background: filter === 'expense' ? '#f87171' : 'var(--panel-2)',
-                  color: 'var(--ink)',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                Despesas
-              </button>
+            <div className="mb-field">
+              <span>Filtro</span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setFilter('all')}
+                  className={`mb-btn ${filter === 'all' ? 'bg-[#59d4ff]/20 border-[#59d4ff]' : ''}`}
+                >
+                  Todos
+                </button>
+                <button
+                  onClick={() => setFilter('income')}
+                  className={`mb-btn ${filter === 'income' ? 'bg-[#c3f3d2]/20 border-[#c3f3d2]' : ''}`}
+                >
+                  Receitas
+                </button>
+                <button
+                  onClick={() => setFilter('expense')}
+                  className={`mb-btn ${filter === 'expense' ? 'bg-[#ffd2dc]/20 border-[#ffd2dc]' : ''}`}
+                >
+                  Despesas
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '24px' }}>
+        <div className="mb-top-grid">
           {/* Transactions List */}
-          <div className="card" style={{ background: 'var(--panel)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--line)', overflow: 'hidden' }}>
-            <div style={{ padding: '20px', borderBottom: '1px solid var(--line)' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--ink)' }}>
-                {filteredTransactions.length} lançamento{filteredTransactions.length !== 1 ? 's' : ''}
-              </h2>
+          <div className="mb-section">
+            <div className="mb-section-header">
+              <div className="mb-section-headline">
+                <h3>Lançamentos</h3>
+                <span className="mb-step-summary">{filteredTransactions.length} itens</span>
+              </div>
             </div>
-            <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+            <div className="mb-list">
               {filteredTransactions.length === 0 ? (
-                <div style={{ padding: '32px', textAlign: 'center', color: 'var(--ink-soft)' }}>
-                  Nenhum lançamento encontrado
-                </div>
+                <div className="mb-empty">Nenhum lançamento encontrado</div>
               ) : (
                 filteredTransactions.map((transaction) => (
-                  <div
-                    key={transaction.id}
-                    style={{
-                      padding: '16px 20px',
-                      borderBottom: '1px solid var(--line)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      transition: 'background 0.2s ease',
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--panel-2)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{
-                          width: '8px',
-                          height: '8px',
-                          borderRadius: '50%',
-                          background: transaction.kind === 'income' ? '#4ade80' : '#f87171'
-                        }} />
-                        <div>
-                          <div style={{ color: 'var(--ink)', fontWeight: '500', fontSize: '14px' }}>{transaction.description}</div>
-                          <div style={{ color: 'var(--ink-soft)', fontSize: '12px', marginTop: '2px' }}>
-                            {transaction.category} · {shortDate.format(new Date(transaction.date))}
-                          </div>
-                        </div>
+                  <div key={transaction.id} className="mb-expense-item">
+                    <div>
+                      <p className="text-[#e9edff]">{transaction.description}</p>
+                      <div className="mb-expense-meta">
+                        <span className="mb-badge mb-badge--need">{transaction.category}</span>
+                        <span className="text-[#9fb0dc] text-xs">
+                          {shortDate.format(new Date(transaction.date))}
+                        </span>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                      <div style={{ textAlign: 'right', color: transaction.kind === 'income' ? '#4ade80' : '#f87171' }}>
-                        <div style={{ fontWeight: '600', fontSize: '15px' }}>
-                          {transaction.kind === 'income' ? '+' : '-'}{currency.format(transaction.amount)}
-                        </div>
-                      </div>
+                    <div className="mb-expense-meta">
+                      <span className={transaction.kind === 'income' ? 'text-[#c3f3d2]' : 'text-[#ffd2dc]'}>
+                        {transaction.kind === 'income' ? '+' : '-'}{currency.format(transaction.amount)}
+                      </span>
                       <button
                         onClick={() => deleteTransaction(transaction.id)}
-                        style={{
-                          background: 'transparent',
-                          border: 'none',
-                          color: 'var(--ink-soft)',
-                          cursor: 'pointer',
-                          padding: '4px',
-                          borderRadius: 'var(--radius-sm)',
-                          transition: 'all 0.2s ease',
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.background = 'rgba(248, 113, 113, 0.1)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--ink-soft)'; e.currentTarget.style.background = 'transparent'; }}
+                        className="mb-remove"
                         title="Excluir"
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-                        </svg>
+                        −
                       </button>
                     </div>
                   </div>
@@ -316,25 +242,23 @@ export default function LancamentosPage() {
           </div>
 
           {/* Category Summary */}
-          <div className="card" style={{ background: 'var(--panel)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--line)', overflow: 'hidden' }}>
-            <div style={{ padding: '20px', borderBottom: '1px solid var(--line)' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--ink)' }}>Resumo por Categoria</h2>
+          <div className="mb-section">
+            <div className="mb-section-header">
+              <h3>Resumo por Categoria</h3>
             </div>
-            <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+            <div className="mb-list">
               {categoryTotals.length === 0 ? (
-                <div style={{ padding: '32px', textAlign: 'center', color: 'var(--ink-soft)' }}>
-                  Sem dados
-                </div>
+                <div className="mb-empty">Sem dados</div>
               ) : (
                 categoryTotals.map((item) => (
-                  <div key={item.category} style={{ padding: '16px 20px', borderBottom: '1px solid var(--line)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <div style={{ color: 'var(--ink)', fontWeight: '500', fontSize: '14px' }}>{item.category}</div>
-                      <div style={{ color: 'var(--ink)', fontWeight: '600', fontSize: '15px' }}>{currency.format(item.total)}</div>
+                  <div key={item.category} className="mb-expense-item">
+                    <div>
+                      <p className="text-[#e9edff]">{item.category}</p>
+                      <div className="text-[#9fb0dc] text-xs">
+                        {item.count} lançamento{item.count !== 1 ? 's' : ''} · média {currency.format(item.avg)}
+                      </div>
                     </div>
-                    <div style={{ color: 'var(--ink-soft)', fontSize: '12px' }}>
-                      {item.count} lançamento{item.count !== 1 ? 's' : ''} · média {currency.format(item.avg)}
-                    </div>
+                    <span className="text-[#e9edff]">{currency.format(item.total)}</span>
                   </div>
                 ))
               )}
