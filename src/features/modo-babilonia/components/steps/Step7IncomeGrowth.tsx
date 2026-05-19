@@ -45,7 +45,7 @@ export function Step7IncomeGrowth() {
       </div>
 
       <div className="mb-note">
-        <p className="mb-note-title">Plano sugerido (mockado)</p>
+        <p className="mb-note-title">Plano sugerido</p>
         <ul className="mb-list">
           {plan.map((item) => (
             <li key={item}>- {item}</li>

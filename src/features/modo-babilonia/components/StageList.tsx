@@ -1,4 +1,5 @@
 import { BabiloniaStage } from "../types";
+import React from "react";
 
 const STAGE_HELP: Record<number, string> = {
   1: "Defina quanto entra e quanto voce separa para voce.",
@@ -10,7 +11,7 @@ const STAGE_HELP: Record<number, string> = {
   7: "Crie plano de evolucao para aumentar renda.",
 };
 
-const STAGE_THEME: Record<number, { label: string; icon: JSX.Element }> = {
+const STAGE_THEME: Record<number, { label: string; icon: React.ReactNode }> = {
   1: {
     label: "Fundacao",
     icon: (

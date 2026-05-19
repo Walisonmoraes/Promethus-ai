@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Fraunces, Space_Grotesk } from "next/font/google";
 import "./globals.css";
+import AuthGuard from "@/components/AuthGuard";
+import AuthSessionProvider from "@/components/SessionProvider";
 
 const display = Fraunces({
   subsets: ["latin"],
@@ -36,7 +38,9 @@ export default function RootLayout({
         />
       </head>
       <body className={`${display.variable} ${sans.variable}`}>
-        {children}
+        <AuthSessionProvider>
+          <AuthGuard>{children}</AuthGuard>
+        </AuthSessionProvider>
       </body>
     </html>
   );
