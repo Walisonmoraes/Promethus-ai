@@ -31,6 +31,7 @@ export default function LancamentosPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [importingNotas, setImportingNotas] = useState(false);
 
   useEffect(() => {
     loadTransactions();
@@ -63,6 +64,38 @@ export default function LancamentosPage() {
       }
     } catch (error) {
       console.error('Error deleting transaction:', error);
+    }
+  };
+
+  const importNotasFiscais = async () => {
+    setImportingNotas(true);
+    try {
+      const cpf = prompt('Digite seu CPF (apenas números):');
+      if (!cpf) {
+        setImportingNotas(false);
+        return;
+      }
+
+      const response = await fetch('/api/sefaz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cpf, month: 5, year: 2026 }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert('Notas fiscais importadas com sucesso!');
+        console.log('Notas importadas:', data);
+        // Recarregar transações após importação
+        loadTransactions();
+      } else {
+        alert('Erro ao importar notas fiscais');
+      }
+    } catch (error) {
+      console.error('Error importing notas fiscais:', error);
+      alert('Erro ao importar notas fiscais');
+    } finally {
+      setImportingNotas(false);
     }
   };
 
@@ -153,6 +186,36 @@ export default function LancamentosPage() {
                 <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
                 <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
               </svg>
+            </button>
+          </div>
+          <div className="flex justify-end mb-4">
+            <button
+              type="button"
+              className="mb-btn"
+              title="Importar notas fiscais"
+              onClick={importNotasFiscais}
+              disabled={importingNotas}
+              style={{
+                background: importingNotas 
+                  ? 'linear-gradient(120deg, rgba(100, 100, 100, 0.6), rgba(80, 80, 80, 0.5))'
+                  : 'linear-gradient(120deg, rgba(34, 197, 94, 0.6), rgba(16, 185, 129, 0.5))',
+                borderColor: importingNotas ? 'rgba(100, 100, 100, 0.8)' : 'rgba(34, 197, 94, 0.8)',
+                boxShadow: importingNotas ? 'none' : '0 0 20px rgba(34, 197, 94, 0.4)',
+                padding: '10px 16px',
+                opacity: importingNotas ? 0.6 : 1,
+                cursor: importingNotas ? 'not-allowed' : 'pointer'
+              }}
+            >
+              {importingNotas ? (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(255, 255, 255, 0.9)', animation: 'spin 1s linear infinite' }}>
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                </svg>
+              ) : (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+                </svg>
+              )}
             </button>
           </div>
           <p className="mb-kicker">Histórico Financeiro</p>

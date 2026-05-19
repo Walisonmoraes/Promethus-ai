@@ -1,9 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import path from 'path';
-
-const execAsync = promisify(exec);
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,34 +12,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Caminho para o script Python
-    const scriptPath = path.join(process.cwd(), 'sefaz_scraper.py');
-    
-    // Constrói comando Python
-    const pythonCommand = `python3 ${scriptPath} --cpf ${cpf}${month ? ` --month ${month}` : ''}${year ? ` --year ${year}` : ''}`;
-
-    // Executa script Python
-    const { stdout, stderr } = await execAsync(pythonCommand, {
-      timeout: 60000, // 60 segundos timeout
-    });
-
-    if (stderr) {
-      console.error('Erro no script Python:', stderr);
-    }
-
-    // Tenta parsear o JSON de saída
-    let notas;
-    try {
-      notas = JSON.parse(stdout);
-    } catch (e) {
-      // Se não for JSON, retorna o stdout como texto
-      notas = { raw_output: stdout };
-    }
+    // Simulação de resposta - em produção, isso seria integrado com o script Python
+    // Por enquanto, retorna dados de exemplo para testar a interface
+    const mockNotas = [
+      {
+        data: '18/05/2026',
+        numero: '12345',
+        valor: 'R$ 150,00',
+        cnpj: '12.345.678/0001-90',
+        empresa: 'Supermercado Exemplo',
+        data_extracao: new Date().toISOString()
+      },
+      {
+        data: '15/05/2026',
+        numero: '12346',
+        valor: 'R$ 89,90',
+        cnpj: '98.765.432/0001-10',
+        empresa: 'Farmácia Central',
+        data_extracao: new Date().toISOString()
+      }
+    ];
 
     return NextResponse.json({
       success: true,
-      data: notas,
-      message: 'Notas fiscais extraídas com sucesso'
+      data: mockNotas,
+      message: 'Notas fiscais importadas com sucesso (modo demonstração)',
+      note: 'Para usar o scraping real, configure o ambiente Python com Playwright'
     });
 
   } catch (error: any) {
@@ -64,6 +57,7 @@ export async function GET() {
       cpf: 'string (obrigatório)',
       month: 'number (opcional, 1-12)',
       year: 'number (opcional, padrão 2026)'
-    }
+    },
+    note: 'Atualmente em modo demonstração - retorna dados de exemplo'
   });
 }
