@@ -264,10 +264,8 @@ export default function LancamentosPage() {
               ) : (
                 filteredTransactions.map((transaction) => (
                   <div key={transaction.id} className="mb-expense-item" style={{
-                    background: transaction.kind === 'income' 
-                      ? 'radial-gradient(circle at 88% 12%, rgba(34, 197, 94, 0.12), transparent 40%), rgba(6, 78, 59, 0.88)'
-                      : 'radial-gradient(circle at 88% 12%, rgba(239, 68, 68, 0.12), transparent 40%), rgba(69, 10, 10, 0.88)',
-                    borderColor: transaction.kind === 'income' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)'
+                    background: 'radial-gradient(circle at 88% 12%, rgba(59, 130, 246, 0.08), transparent 40%), rgba(15, 23, 42, 0.88)',
+                    borderColor: 'rgba(59, 130, 246, 0.3)'
                   }}>
                     <div>
                       <p style={{ color: '#e2e8f0' }}>{transaction.description}</p>
