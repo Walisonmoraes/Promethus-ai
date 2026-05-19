@@ -1,4 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server'
+import { supabaseAdmin } from '@/lib/supabase'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/lib/auth'
+import { parseTransaction } from '@/lib/transactionParser'
 
 // Sistema de categorização local com palavras-chave brasileiras
 const categoryKeywords = {
@@ -80,7 +84,6 @@ const categoryKeywords = {
   Outros: []
 };
 
-// Função de categorização local (fallback)
 // Ordem de prioridade: categorias mais específicas primeiro
 const categoryPriority = [
   'Saude',
@@ -116,122 +119,76 @@ function categorizeLocally(text: string): string {
   return 'Outros';
 }
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await req.json();
-    const { text } = body;
+    const session = await getServerSession(authOptions)
     
+    if (!session?.user?.email) {
+      console.error('No session or email found')
+      return NextResponse.json({ error: 'Unauthorized - No session' }, { status: 401 })
+    }
+
+    const userId = session.user.email
+    const body = await request.json()
+    const { text } = body
+
     if (!text) {
-      return NextResponse.json({ category: "Outros" }, { status: 400 });
+      return NextResponse.json({ error: 'Missing text field' }, { status: 400 })
     }
 
-    const apiKey = process.env.GROQ_API_KEY;
-    const apiUrl = process.env.GROQ_API_URL || "https://api.groq.com/openai/v1";
+    console.log('Smart transaction creation for user:', userId)
+    console.log('Input text:', text)
 
-    // Se não tiver API key, usa categorização local
-    if (!apiKey) {
-      console.warn("GROQ_API_KEY not configured, using local categorization");
-      const localCategory = categorizeLocally(text);
-      return NextResponse.json({ category: localCategory });
+    // 1. Extrair informações do texto
+    const parsed = parseTransaction(text)
+    console.log('Parsed transaction:', parsed)
+
+    if (!parsed.amount) {
+      return NextResponse.json({ 
+        error: 'Could not extract amount from text. Please include a value.',
+        parsed 
+      }, { status: 400 })
     }
 
-    const response = await fetch(`${apiUrl}/chat/completions`, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: "llama-3.1-8b-instant",
-        messages: [
-          {
-            role: "system",
-            content: `Voce e um classificador financeiro especializado em contexto brasileiro. Sua unica tarefa e analisar o texto fornecido e retornar APENAS uma das seguintes categorias exatas:
+    // 2. Categorizar usando sistema local (mais rápido e confiável)
+    const category = categorizeLocally(text)
+    console.log('Categorized as:', category)
 
-Categorias validas:
-- Alimentacao (comida, restaurante, mercado, padaria, lanches, bebidas)
-- Transporte (uber, taxi, onibus, combustivel, pedagio, estacionamento, manutencao veicular)
-- Moradia (aluguel, condominio, agua, luz, internet, gas, reformas, moveis, eletrodomesticos)
-- Saude (remedios, farmacia, medico, hospital, exames, dentista, plano de saude, suplementos)
-- Educacao (escola, faculdade, cursos, livros, material escolar, idiomas)
-- Lazer (cinema, viagens, streaming, academia, esportes, entretenimento, festas)
-- Compras (roupas, sapatos, acessorios, lojas, shopping)
-- Servicos (assinaturas, seguros, banco, taxas, manutencao, limpeza)
-- Investimentos (acoes, tesouro, cripto, corretora, renda fixa/variavel)
-- Salario (salario, holerite, pagamento mensal)
-- Freelancer (trabalho autônomo, projetos, consultoria, pj)
-- Outros (quando nao se encaixar nas categorias acima)
-
-Regras importantes:
-- Retorne APENAS o nome da categoria, sem explicacoes
-- Considere o contexto brasileiro e gírias locais
-- Analise palavras-chave e contexto financeiro
-- Seja especifico e preciso
-- Use exatamente uma das categorias listadas acima
-
-Exemplos brasileiros:
-"remedio elise" -> Saude
-"10,99 de bolachas" -> Alimentacao
-"gastei 50 no restaurante" -> Alimentacao
-"paguei 20 no uber" -> Transporte
-"compra no mercado" -> Alimentacao
-"farmacia drogaria" -> Saude
-"mensalidade da netflix" -> Lazer
-"aluguel do apartamento" -> Moradia
-"conta de luz" -> Moradia
-"gasolina" -> Transporte
-"salario do mes" -> Salario
-"projeto freelance" -> Freelancer
-"roupa na renner" -> Compras
-"academia" -> Lazer
-"plano de saude unimed" -> Saude
-"ipva do carro" -> Transporte
-"internet vivo" -> Moradia
-"livraria" -> Educacao
-"curso de ingles" -> Educacao
-"acao da petrobras" -> Investimentos
-"tesouro direto" -> Investimentos
-"cerveja no bar" -> Alimentacao
-"pizza delivery" -> Alimentacao
-"show no parque" -> Lazer
-"viagem praia" -> Lazer
-"manutencao do carro" -> Transporte
-"dentista" -> Saude
-"psicologo" -> Saude
-"suplemento" -> Saude
-"vitamina" -> Saude
-"oculos de grau" -> Saude`
-          },
-          {
-            role: "user",
-            content: text
-          }
-        ],
-        temperature: 0.1,
-        max_tokens: 50,
-      }),
-    });
-
-    if (!response.ok) {
-      console.error("Groq categorization error:", response.status, response.statusText);
-      // Fallback para categorização local se a API falhar
-      const localCategory = categorizeLocally(text);
-      return NextResponse.json({ category: localCategory });
+    // 3. Criar a transação
+    const transactionData = {
+      user_id: userId,
+      amount: parsed.amount,
+      category: category,
+      description: parsed.description,
+      kind: parsed.kind,
+      date: new Date().toISOString().split('T')[0]
     }
 
-    const data = await response.json();
-    const category = data?.choices?.[0]?.message?.content?.trim() || "Outros";
-    
-    // Validar se a categoria retornada é válida
-    const validCategories = ["Alimentacao", "Transporte", "Moradia", "Saude", "Educacao", "Lazer", "Compras", "Servicos", "Investimentos", "Salario", "Freelancer", "Outros"];
-    const finalCategory = validCategories.includes(category) ? category : categorizeLocally(text);
-    
-    return NextResponse.json({ category: finalCategory });
+    if (!supabaseAdmin) {
+      console.error('Supabase admin client not initialized')
+      return NextResponse.json({ error: 'Database not configured' }, { status: 500 })
+    }
+
+    const { data: transaction, error } = await supabaseAdmin
+      .from('transactions')
+      .insert(transactionData)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error creating transaction:', error)
+      console.error('Error details:', JSON.stringify(error, null, 2))
+      return NextResponse.json({ error: 'Failed to create transaction', details: error.message }, { status: 500 })
+    }
+
+    console.log('Smart transaction created successfully:', transaction)
+    return NextResponse.json({ 
+      transaction,
+      parsed,
+      category 
+    }, { status: 201 })
   } catch (error) {
-    console.error("Groq categorization error:", error);
-    // Fallback para categorização local em caso de erro
-    const body = await req.json().catch(() => ({ text: "" }));
-    const localCategory = categorizeLocally(body.text || "");
-    return NextResponse.json({ category: localCategory });
+    console.error('Server error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

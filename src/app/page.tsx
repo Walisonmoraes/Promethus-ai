@@ -162,7 +162,7 @@ const GOAL_CATEGORIES = [
   "Outros",
 ];
 
-type ModalType = "agenda" | "meta" | "historico" | "edit-agenda" | "edit-meta" | "edit-historico" | "modo-babilonia";
+type ModalType = "agenda" | "meta" | "historico" | "edit-agenda" | "edit-meta" | "edit-historico" | "modo-babilonia" | "pluggy-connect";
 
 type ChipId = "resumo" | "categorias";
 
@@ -197,14 +197,15 @@ const dayLabel = new Intl.DateTimeFormat("pt-BR", {
 });
 
 const CATEGORY_KEYWORDS: Array<[string, string[]]> = [
-  ["Alimentacao", ["restaurante", "lanche", "ifood", "comida", "mercado", "padaria"]],
-  ["Transporte", ["uber", "taxi", "onibus", "metro", "combustivel", "gasolina"]],
-  ["Moradia", ["aluguel", "condominio", "luz", "energia", "agua", "internet"]],
-  ["Saude", ["farmacia", "medico", "consulta", "academia"]],
-  ["Lazer", ["cinema", "viagem", "show", "jogo", "bar", "cafe"]],
-  ["Compras", ["roupa", "loja", "shopping", "eletronico", "presente"]],
+  ["Alimentacao", ["restaurante", "lanche", "ifood", "comida", "mercado", "padaria", "bolacha", "biscoito", "pao", "arroz", "feijao", "carne", "frango", "peixe", "legume", "fruta", "verdura", "leite", "queijo", "ovo", "macarrao", "pizza", "hamburguer", "sorvete", "doce", "bolo", "chocolate", "refrigerante", "suco", "agua", "cerveja", "delivery", "rappi", "uber eats", "almoco", "jantar", "cafe", "lanchonete", "supermercado"]],
+  ["Transporte", ["uber", "99", "taxi", "onibus", "metro", "trem", "combustivel", "gasolina", "alcool", "diesel", "posto", "pedagio", "estacionamento", "multa", "ipva", "licenciamento", "manutencao", "mecanico", "pneu", "oleo", "bicicleta", "patinete", "moto", "carro", "passagem", "aereo", "aviao", "rodoviaria", "aplicativo", "corrida"]],
+  ["Moradia", ["aluguel", "condominio", "luz", "energia", "agua", "internet", "net", "vivo", "claro", "oi", "telefone", "celular", "gas", "encanador", "eletricista", "reforma", "mobilia", "moveis", "eletro", "geladeira", "fogao", "maquina", "televisao", "tv", "ar condicionado", "lava roupa", "secadora", "microondas", "cama", "sofa", "mesa", "cadeira", "decoracao"]],
+  ["Saude", ["remedio", "medicamento", "farmacia", "drogaria", "medico", "medica", "hospital", "clinica", "consulta", "exame", "dentista", "odonto", "plano de saude", "unimed", "bradesco saude", "amil", "sulamerica", "oftalmo", "psicologo", "terapia", "fisioterapeuta", "vacina", "lente", "oculos", "colirio", "vitamina", "suplemento", "elise", "dipirona"]],
+  ["Lazer", ["cinema", "teatro", "show", "concerto", "festival", "parque", "praia", "viagem", "hotel", "pousada", "airbnb", "booking", "jogo", "playstation", "xbox", "nintendo", "steam", "netflix", "spotify", "prime", "disney", "hbo", "gym", "academia", "personal", "esporte", "futebol", "natacao", "yoga", "pilates", "bar", "balada", "festa", "clube", "entretenimento", "mensalidade", "assinatura", "streaming"]],
+  ["Compras", ["roupa", "calcado", "sapato", "tenis", "bota", "camisa", "calca", "vestido", "blusa", "jaqueta", "casaco", "bermuda", "short", "meia", "loja", "shopping", "magazine", "riachuelo", "renner", "c&a", "zara", "h&m", "cos", "pull bear", "bershka", "mango", "acessorio", "bijuteria", "relogio", "brinco", "colar", "anel", "perfume", "maquiagem", "eletronico", "presente"]],
+  ["Educacao", ["escola", "faculdade", "universidade", "curso", "aula", "livro", "livraria", "material", "escolar", "mensalidade", "matricula", "pos", "mba", "ingles", "idioma", "espanhol", "frances", "alemao", "online", "platzi", "udemy", "alura", "rocketseat", "colegio", "educacao", "ensino"]],
   ["Metas", ["meta", "aporte"]],
-  ["Receita", ["salario", "freela", "bonus", "pix", "recebi", "ganhei"]],
+  ["Receita", ["salario", "freela", "bonus", "pix", "recebi", "ganhei", "pagamento", "receita", "renda", "comissao", "projeto", "cliente", "venda", "lucro", "dividendo", "juros", "deposito", "transferencia"]],
 ];
 
 const DEPOSIT_KEYWORDS = [
@@ -1056,6 +1057,13 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
   const [modal, setModal] = useState<null | { type: ModalType; id?: string }>(null);
   const [babiloniaMax, setBabiloniaMax] = useState(false);
   const chatWindowRef = useRef<HTMLDivElement | null>(null);
+  
+  // Estado para Pluggy
+  const [pluggyConnectors, setPluggyConnectors] = useState<any[]>([]);
+  const [selectedConnector, setSelectedConnector] = useState<any>(null);
+  const [pluggyCredentials, setPluggyCredentials] = useState<any>({});
+  const [pluggyLoading, setPluggyLoading] = useState(false);
+  const [pluggyError, setPluggyError] = useState<string | null>(null);
 
   useEffect(() => {
     if (hasRotatedIntro || START_MESSAGES_TEXTS.length === 0) return;
@@ -2309,13 +2317,23 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
           <div className="card section-anchor history-card" id="section-lancamentos">
             <div className="card-header enhanced-header">
               <h2 className="section-title">Histórico de lançamentos</h2>
-              <button
-                type="button"
-                className="icon-btn icon-add enhanced-add-btn"
-                onClick={() => setModal({ type: "historico" })}
-              >
-                +
-              </button>
+              <div className="header-actions">
+                <button
+                  type="button"
+                  className="icon-btn icon-add enhanced-add-btn"
+                  onClick={() => setModal({ type: "pluggy-connect" })}
+                  title="Conectar banco"
+                >
+                  🏦
+                </button>
+                <button
+                  type="button"
+                  className="icon-btn icon-add enhanced-add-btn"
+                  onClick={() => setModal({ type: "historico" })}
+                >
+                  +
+                </button>
+              </div>
             </div>
             <div className="list enhanced-list">
               {recentExpenses.length === 0 ? (
@@ -4171,6 +4189,105 @@ export default function Home() {  const [messages, setMessages] = useState<Messa
                   </>
                 );
               })()
+            ) : null}
+
+            {modal.type === "pluggy-connect" ? (
+              <>
+                <h3>Conectar banco</h3>
+                {pluggyConnectors.length === 0 ? (
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={async () => {
+                      setPluggyLoading(true);
+                      setPluggyError(null);
+                      try {
+                        const response = await fetch('/api/pluggy/connectors');
+                        const data = await response.json();
+                        setPluggyConnectors(data.connectors || []);
+                      } catch (error) {
+                        setPluggyError('Erro ao carregar bancos');
+                      } finally {
+                        setPluggyLoading(false);
+                      }
+                    }}
+                    disabled={pluggyLoading}
+                  >
+                    {pluggyLoading ? 'Carregando...' : 'Carregar bancos'}
+                  </button>
+                ) : !selectedConnector ? (
+                  <>
+                    <select
+                      className="input-mini"
+                      onChange={(e) => {
+                        const connector = pluggyConnectors.find((c: any) => c.id === Number(e.target.value));
+                        setSelectedConnector(connector);
+                        setPluggyCredentials({});
+                      }}
+                    >
+                      <option value="">Selecione um banco</option>
+                      {pluggyConnectors.map((connector: any) => (
+                        <option key={connector.id} value={connector.id}>
+                          {connector.name}
+                        </option>
+                      ))}
+                    </select>
+                  </>
+                ) : (
+                  <>
+                    <p>Conectando: {selectedConnector.name}</p>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={async () => {
+                        setPluggyLoading(true);
+                        setPluggyError(null);
+                        try {
+                          const response = await fetch('/api/pluggy/connect-token', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              connectorId: selectedConnector.id,
+                            }),
+                          });
+                          const data = await response.json();
+                          if (data.connectToken) {
+                            // Abrir widget do Pluggy Connect
+                            const widgetUrl = `https://connect.pluggy.ai?connectToken=${data.connectToken}`;
+                            window.open(widgetUrl, '_blank', 'width=500,height=700');
+                            alert('Widget aberto! Após conectar, feche o widget e clique em OK.');
+                            setModal(null);
+                            setSelectedConnector(null);
+                            setPluggyConnectors([]);
+                          } else {
+                            setPluggyError('Erro ao gerar token de conexão');
+                          }
+                        } catch (error) {
+                          setPluggyError('Erro ao gerar token de conexão');
+                        } finally {
+                          setPluggyLoading(false);
+                        }
+                      }}
+                      disabled={pluggyLoading}
+                    >
+                      {pluggyLoading ? 'Gerando token...' : 'Abrir widget de conexão'}
+                    </button>
+                    <div className="modal-actions">
+                      <button
+                        type="button"
+                        className="btn-ghost"
+                        onClick={() => {
+                          setSelectedConnector(null);
+                          setPluggyCredentials({});
+                        }}
+                      >
+                        Voltar
+                      </button>
+                    </div>
+                  </>
+                )}
+                {pluggyError && <p style={{ color: 'red' }}>{pluggyError}</p>}
+              </>
             ) : null}
           </div>
         </div>
