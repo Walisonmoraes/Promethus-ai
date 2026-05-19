@@ -145,11 +145,13 @@ export default function LancamentosPage() {
               style={{
                 background: 'linear-gradient(120deg, rgba(124, 92, 255, 0.6), rgba(59, 130, 246, 0.5))',
                 borderColor: 'rgba(124, 92, 255, 0.8)',
-                boxShadow: '0 0 20px rgba(124, 92, 255, 0.4)'
+                boxShadow: '0 0 20px rgba(124, 92, 255, 0.4)',
+                padding: '10px 16px'
               }}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-                <path d="M3 21h18M5 21V7l8-4 8 4v14M10 9h4M10 13h4M10 17h4" />
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
               </svg>
             </button>
           </div>
