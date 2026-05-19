@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import "@/features/modo-babilonia/modo-babilonia.css";
 
 const currency = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -116,172 +117,225 @@ export default function LancamentosPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0b0b13] flex items-center justify-center">
+      <div className="mb-page flex items-center justify-center">
         <div className="text-white text-xl">Carregando...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0b0b13] p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="mb-page">
+      <div className="mb-shell">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-hero">
           <button
             onClick={() => router.push('/')}
-            className="text-[#b7b7c7] hover:text-white mb-4 flex items-center gap-2 transition-colors"
+            className="text-[#d2ddff] hover:text-white mb-4 flex items-center gap-2 transition-colors"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
             Voltar
           </button>
-          <h1 className="text-4xl font-bold text-white mb-2">Histórico de Lançamentos</h1>
-          <p className="text-[#b7b7c7]">Todos os seus lançamentos financeiros</p>
+          <p className="mb-kicker">Histórico Financeiro</p>
+          <h1 className="mb-title">Lançamentos</h1>
+          <p className="mb-subtitle">Todos os seus lançamentos financeiros em um só lugar</p>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-[#141428] backdrop-blur-lg rounded-[20px] p-6 border border-[#27273b]">
-            <div className="text-[#b7b7c7] text-sm mb-1">Receitas</div>
-            <div className="text-2xl font-bold text-[#39d0ff]">{currency.format(totals.income)}</div>
+        <div className="mb-game-strip">
+          <div className="mb-game-card" style={{
+            background: 'radial-gradient(circle at 85% 12%, rgba(34, 197, 94, 0.3), transparent 42%), linear-gradient(140deg, rgba(21, 128, 61, 0.6), rgba(5, 46, 22, 0.95))',
+            borderColor: 'rgba(34, 197, 94, 0.6)'
+          }}>
+            <span style={{ color: '#86efac' }}>Receitas</span>
+            <strong style={{ color: '#4ade80', textShadow: '0 0 20px rgba(74, 222, 128, 0.5)' }}>{currency.format(totals.income)}</strong>
           </div>
-          <div className="bg-[#141428] backdrop-blur-lg rounded-[20px] p-6 border border-[#27273b]">
-            <div className="text-[#b7b7c7] text-sm mb-1">Despesas</div>
-            <div className="text-2xl font-bold text-[#ff6ad5]">{currency.format(totals.expense)}</div>
+          <div className="mb-game-card" style={{
+            background: 'radial-gradient(circle at 85% 12%, rgba(239, 68, 68, 0.3), transparent 42%), linear-gradient(140deg, rgba(153, 27, 27, 0.6), rgba(69, 10, 10, 0.95))',
+            borderColor: 'rgba(239, 68, 68, 0.6)'
+          }}>
+            <span style={{ color: '#fca5a5' }}>Despesas</span>
+            <strong style={{ color: '#f87171', textShadow: '0 0 20px rgba(248, 113, 113, 0.5)' }}>{currency.format(totals.expense)}</strong>
           </div>
-          <div className="bg-[#141428] backdrop-blur-lg rounded-[20px] p-6 border border-[#27273b]">
-            <div className="text-[#b7b7c7] text-sm mb-1">Saldo</div>
-            <div className={`text-2xl font-bold ${totals.balance >= 0 ? 'text-[#39d0ff]' : 'text-[#ff6ad5]'}`}>
+          <div className="mb-game-card" style={{
+            background: totals.balance >= 0 
+              ? 'radial-gradient(circle at 85% 12%, rgba(34, 197, 94, 0.3), transparent 42%), linear-gradient(140deg, rgba(21, 128, 61, 0.6), rgba(5, 46, 22, 0.95))'
+              : 'radial-gradient(circle at 85% 12%, rgba(239, 68, 68, 0.3), transparent 42%), linear-gradient(140deg, rgba(153, 27, 27, 0.6), rgba(69, 10, 10, 0.95))',
+            borderColor: totals.balance >= 0 ? 'rgba(34, 197, 94, 0.6)' : 'rgba(239, 68, 68, 0.6)'
+          }}>
+            <span style={{ color: totals.balance >= 0 ? '#86efac' : '#fca5a5' }}>Saldo</span>
+            <strong style={{ 
+              color: totals.balance >= 0 ? '#4ade80' : '#f87171',
+              textShadow: totals.balance >= 0 ? '0 0 20px rgba(74, 222, 128, 0.5)' : '0 0 20px rgba(248, 113, 113, 0.5)'
+            }}>
               {currency.format(totals.balance)}
-            </div>
+            </strong>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-[#141428] backdrop-blur-lg rounded-[20px] p-4 border border-[#27273b] mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
+        <div className="mb-card" style={{
+          background: 'radial-gradient(circle at 92% 12%, rgba(147, 51, 234, 0.2), transparent 38%), linear-gradient(140deg, rgba(30, 27, 75, 0.95), rgba(17, 24, 39, 0.95))',
+          borderColor: 'rgba(147, 51, 234, 0.5)'
+        }}>
+          <div className="mb-row-2">
+            <div className="mb-field">
+              <span style={{ color: '#c4b5fd' }}>Buscar</span>
               <input
                 type="text"
-                placeholder="Buscar por descrição ou categoria..."
+                placeholder="Descrição ou categoria..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-[#0b0b13] border border-[#27273b] rounded-[14px] px-4 py-2 text-white placeholder-[#b7b7c7] focus:outline-none focus:ring-2 focus:ring-[#7c5cff]"
+                className="mb-input"
+                style={{
+                  borderColor: 'rgba(147, 51, 234, 0.4)',
+                  background: 'rgba(17, 24, 39, 0.95)',
+                  color: '#e9edff'
+                }}
               />
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setFilter('all')}
-                className={`px-4 py-2 rounded-[14px] transition-colors ${
-                  filter === 'all' ? 'bg-[#7c5cff] text-white' : 'bg-[#1a1a32] text-[#b7b7c7] hover:bg-[#27273b]'
-                }`}
-              >
-                Todos
-              </button>
-              <button
-                onClick={() => setFilter('income')}
-                className={`px-4 py-2 rounded-[14px] transition-colors ${
-                  filter === 'income' ? 'bg-[#39d0ff] text-white' : 'bg-[#1a1a32] text-[#b7b7c7] hover:bg-[#27273b]'
-                }`}
-              >
-                Receitas
-              </button>
-              <button
-                onClick={() => setFilter('expense')}
-                className={`px-4 py-2 rounded-[14px] transition-colors ${
-                  filter === 'expense' ? 'bg-[#ff6ad5] text-white' : 'bg-[#1a1a32] text-[#b7b7c7] hover:bg-[#27273b]'
-                }`}
-              >
-                Despesas
-              </button>
+            <div className="mb-field">
+              <span style={{ color: '#c4b5fd' }}>Filtro</span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setFilter('all')}
+                  className="mb-btn"
+                  style={{
+                    background: filter === 'all' 
+                      ? 'linear-gradient(120deg, rgba(147, 51, 234, 0.6), rgba(59, 130, 246, 0.5))'
+                      : 'linear-gradient(120deg, rgba(52, 129, 255, 0.3), rgba(15, 198, 217, 0.2))',
+                    borderColor: filter === 'all' ? 'rgba(147, 51, 234, 0.9)' : 'rgba(107, 219, 255, 0.5)',
+                    boxShadow: filter === 'all' ? '0 0 20px rgba(147, 51, 234, 0.4)' : 'none'
+                  }}
+                >
+                  Todos
+                </button>
+                <button
+                  onClick={() => setFilter('income')}
+                  className="mb-btn"
+                  style={{
+                    background: filter === 'income' 
+                      ? 'linear-gradient(120deg, rgba(34, 197, 94, 0.6), rgba(16, 185, 129, 0.5))'
+                      : 'linear-gradient(120deg, rgba(52, 129, 255, 0.3), rgba(15, 198, 217, 0.2))',
+                    borderColor: filter === 'income' ? 'rgba(34, 197, 94, 0.9)' : 'rgba(107, 219, 255, 0.5)',
+                    boxShadow: filter === 'income' ? '0 0 20px rgba(34, 197, 94, 0.4)' : 'none'
+                  }}
+                >
+                  Receitas
+                </button>
+                <button
+                  onClick={() => setFilter('expense')}
+                  className="mb-btn"
+                  style={{
+                    background: filter === 'expense' 
+                      ? 'linear-gradient(120deg, rgba(239, 68, 68, 0.6), rgba(239, 68, 68, 0.5))'
+                      : 'linear-gradient(120deg, rgba(52, 129, 255, 0.3), rgba(15, 198, 217, 0.2))',
+                    borderColor: filter === 'expense' ? 'rgba(239, 68, 68, 0.9)' : 'rgba(107, 219, 255, 0.5)',
+                    boxShadow: filter === 'expense' ? '0 0 20px rgba(239, 68, 68, 0.4)' : 'none'
+                  }}
+                >
+                  Despesas
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="mb-top-grid">
           {/* Transactions List */}
-          <div className="lg:col-span-2">
-            <div className="bg-[#141428] backdrop-blur-lg rounded-[20px] border border-[#27273b] overflow-hidden">
-              <div className="p-4 border-b border-[#27273b]">
-                <h2 className="text-xl font-semibold text-white">
-                  {filteredTransactions.length} lançamento{filteredTransactions.length !== 1 ? 's' : ''}
-                </h2>
+          <div className="mb-section" style={{
+            background: 'radial-gradient(circle at 92% 12%, rgba(59, 130, 246, 0.15), transparent 38%), linear-gradient(140deg, rgba(30, 58, 138, 0.95), rgba(15, 23, 42, 0.95))',
+            borderColor: 'rgba(59, 130, 246, 0.4)'
+          }}>
+            <div className="mb-section-header">
+              <div className="mb-section-headline">
+                <h3 style={{ color: '#93c5fd' }}>Lançamentos</h3>
+                <span className="mb-step-summary" style={{
+                  color: '#60a5fa',
+                  background: 'rgba(59, 130, 246, 0.15)',
+                  borderColor: 'rgba(59, 130, 246, 0.4)'
+                }}>{filteredTransactions.length} itens</span>
               </div>
-              <div className="divide-y divide-[#27273b]">
-                {filteredTransactions.length === 0 ? (
-                  <div className="p-8 text-center text-[#b7b7c7]">
-                    Nenhum lançamento encontrado
-                  </div>
-                ) : (
-                  filteredTransactions.map((transaction) => (
-                    <div
-                      key={transaction.id}
-                      className="p-4 hover:bg-[#1a1a32] transition-colors flex items-center justify-between"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-2 h-2 rounded-full ${
-                            transaction.kind === 'income' ? 'bg-[#39d0ff]' : 'bg-[#ff6ad5]'
-                          }`} />
-                          <div>
-                            <div className="text-white font-medium">{transaction.description}</div>
-                            <div className="text-[#b7b7c7] text-sm">
-                              {transaction.category} · {shortDate.format(new Date(transaction.date))}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className={`text-right ${
-                          transaction.kind === 'income' ? 'text-[#39d0ff]' : 'text-[#ff6ad5]'
-                        }`}>
-                          <div className="font-semibold">
-                            {transaction.kind === 'income' ? '+' : '-'}{currency.format(transaction.amount)}
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => deleteTransaction(transaction.id)}
-                          className="text-[#b7b7c7] hover:text-[#ff6ad5] transition-colors p-2"
-                          title="Excluir"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-                          </svg>
-                        </button>
+            </div>
+            <div className="mb-list">
+              {filteredTransactions.length === 0 ? (
+                <div className="mb-empty" style={{ color: '#94a3b8' }}>Nenhum lançamento encontrado</div>
+              ) : (
+                filteredTransactions.map((transaction) => (
+                  <div key={transaction.id} className="mb-expense-item" style={{
+                    background: transaction.kind === 'income' 
+                      ? 'radial-gradient(circle at 88% 12%, rgba(34, 197, 94, 0.12), transparent 40%), rgba(6, 78, 59, 0.88)'
+                      : 'radial-gradient(circle at 88% 12%, rgba(239, 68, 68, 0.12), transparent 40%), rgba(69, 10, 10, 0.88)',
+                    borderColor: transaction.kind === 'income' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)'
+                  }}>
+                    <div>
+                      <p style={{ color: '#e2e8f0' }}>{transaction.description}</p>
+                      <div className="mb-expense-meta">
+                        <span className="mb-badge" style={{
+                          color: transaction.kind === 'income' ? '#86efac' : '#fca5a5',
+                          background: transaction.kind === 'income' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                          borderColor: transaction.kind === 'income' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)'
+                        }}>{transaction.category}</span>
+                        <span style={{ color: '#94a3b8', fontSize: '0.74rem' }}>
+                          {shortDate.format(new Date(transaction.date))}
+                        </span>
                       </div>
                     </div>
-                  ))
-                )}
-              </div>
+                    <div className="mb-expense-meta">
+                      <span style={{ 
+                        color: transaction.kind === 'income' ? '#4ade80' : '#f87171',
+                        textShadow: transaction.kind === 'income' ? '0 0 15px rgba(74, 222, 128, 0.4)' : '0 0 15px rgba(248, 113, 113, 0.4)',
+                        fontWeight: '700'
+                      }}>
+                        {transaction.kind === 'income' ? '+' : '-'}{currency.format(transaction.amount)}
+                      </span>
+                      <button
+                        onClick={() => deleteTransaction(transaction.id)}
+                        className="mb-remove"
+                        style={{ color: '#f87171' }}
+                        title="Excluir"
+                      >
+                        −
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
           {/* Category Summary */}
-          <div>
-            <div className="bg-[#141428] backdrop-blur-lg rounded-[20px] border border-[#27273b] overflow-hidden">
-              <div className="p-4 border-b border-[#27273b]">
-                <h2 className="text-xl font-semibold text-white">Resumo por Categoria</h2>
-              </div>
-              <div className="divide-y divide-[#27273b]">
-                {categoryTotals.length === 0 ? (
-                  <div className="p-8 text-center text-[#b7b7c7]">
-                    Sem dados
-                  </div>
-                ) : (
-                  categoryTotals.map((item) => (
-                    <div key={item.category} className="p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="text-white font-medium">{item.category}</div>
-                        <div className="text-white font-semibold">{currency.format(item.total)}</div>
-                      </div>
-                      <div className="text-[#b7b7c7] text-sm">
+          <div className="mb-section" style={{
+            background: 'radial-gradient(circle at 92% 12%, rgba(168, 85, 247, 0.15), transparent 38%), linear-gradient(140deg, rgba(88, 28, 135, 0.95), rgba(30, 27, 75, 0.95))',
+            borderColor: 'rgba(168, 85, 247, 0.4)'
+          }}>
+            <div className="mb-section-header">
+              <h3 style={{ color: '#c4b5fd' }}>Resumo por Categoria</h3>
+            </div>
+            <div className="mb-list">
+              {categoryTotals.length === 0 ? (
+                <div className="mb-empty" style={{ color: '#94a3b8' }}>Sem dados</div>
+              ) : (
+                categoryTotals.map((item, index) => (
+                  <div key={item.category} className="mb-expense-item" style={{
+                    background: `radial-gradient(circle at 88% 12%, ${index % 2 === 0 ? 'rgba(168, 85, 247, 0.12)' : 'rgba(59, 130, 246, 0.12)'}, transparent 40%), rgba(30, 27, 75, 0.88)`,
+                    borderColor: index % 2 === 0 ? 'rgba(168, 85, 247, 0.4)' : 'rgba(59, 130, 246, 0.4)'
+                  }}>
+                    <div>
+                      <p style={{ color: '#e2e8f0' }}>{item.category}</p>
+                      <div style={{ color: '#94a3b8', fontSize: '0.74rem' }}>
                         {item.count} lançamento{item.count !== 1 ? 's' : ''} · média {currency.format(item.avg)}
                       </div>
                     </div>
-                  ))
-                )}
-              </div>
+                    <span style={{ 
+                      color: index % 2 === 0 ? '#c4b5fd' : '#93c5fd',
+                      textShadow: index % 2 === 0 ? '0 0 15px rgba(168, 85, 247, 0.4)' : '0 0 15px rgba(59, 130, 246, 0.4)',
+                      fontWeight: '700'
+                    }}>{currency.format(item.total)}</span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
