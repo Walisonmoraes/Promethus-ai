@@ -13,7 +13,12 @@ export async function POST(req: Request) {
 
     if (!apiKey) {
       console.error("GROQ_API_KEY not configured");
-      return NextResponse.json({ text: "" }, { status: 500 });
+      return NextResponse.json(
+        {
+          text: "A integração com o Groq não está configurada na versão online. Configure `GROQ_API_KEY` no ambiente do deploy.",
+        },
+        { status: 500 }
+      );
     }
 
     const response = await fetch(`${apiUrl}/chat/completions`, {
@@ -214,17 +219,23 @@ Evite usar asteriscos soltos como formatação. Use sempre a sintaxe Markdown co
       
       if (response.status === 401) {
         return NextResponse.json({ 
-          text: "⚠️ A API do Groq não está configurada corretamente. Verifique sua API key." 
+          text: "A API do Groq recusou a autenticação. Verifique a `GROQ_API_KEY` configurada no deploy." 
         }, { status: 500 });
       }
       
-      return NextResponse.json({ text: "" }, { status: 500 });
+      return NextResponse.json(
+        { text: "Prometheus AI está indisponível no momento na integração online com o Groq." },
+        { status: 500 }
+      );
     }
 
     const data = await response.json();
     return NextResponse.json({ text: data?.choices?.[0]?.message?.content ?? "" });
   } catch (error) {
     console.error("Groq API error:", error);
-    return NextResponse.json({ text: "" }, { status: 500 });
+    return NextResponse.json(
+      { text: "Erro ao consultar o Groq na versão online. Verifique a configuração do deploy." },
+      { status: 500 }
+    );
   }
 }

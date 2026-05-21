@@ -3,6 +3,7 @@ import { Fraunces, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import AuthGuard from "@/components/AuthGuard";
 import AuthSessionProvider from "@/components/SessionProvider";
+import { BRAND_FAVICON_SRC } from "@/lib/brand";
 
 const display = Fraunces({
   subsets: ["latin"],
@@ -18,9 +19,9 @@ export const metadata: Metadata = {
   title: "Prometheus AI",
   description: "Lancamentos financeiros por conversa, simples como um chat.",
   icons: {
-    icon: "/icon.png",
-    shortcut: "/icon.png",
-    apple: "/icon.png",
+    icon: BRAND_FAVICON_SRC,
+    shortcut: BRAND_FAVICON_SRC,
+    apple: BRAND_FAVICON_SRC,
   },
 };
 

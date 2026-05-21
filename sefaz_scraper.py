@@ -35,12 +35,13 @@ class SefazMTScraper:
         if self.playwright:
             self.playwright.stop()
             
-    def login(self, cpf: str) -> bool:
+    def login(self, cpf: str, senha: str) -> bool:
         """
-        Realiza login no site da SEFAZ-MT usando CPF
+        Realiza login no site da SEFAZ-MT usando CPF e senha
         
         Args:
             cpf: CPF do usuário (apenas números)
+            senha: Senha do usuário
             
         Returns:
             bool: True se login bem-sucedido, False caso contrário
@@ -60,6 +61,17 @@ class SefazMTScraper:
                 
             # Preenche CPF
             cpf_input.fill(cpf)
+            
+            # Procura campo de senha
+            senha_input = (self.page.query_selector('input[name*="senha"]') or 
+                          self.page.query_selector('input[name*="password"]') or
+                          self.page.query_selector('input[type="password"]'))
+            
+            if senha_input:
+                senha_input.fill(senha)
+                print("Senha preenchida")
+            else:
+                print("Campo de senha não encontrado, tentando sem senha")
             
             # Procura botão de login/consulta
             login_button = self.page.query_selector('button[type="submit"]') or self.page.query_selector('input[type="submit"]')
@@ -156,12 +168,13 @@ class SefazMTScraper:
             print(f"Erro ao navegar para mês: {e}")
             return False
             
-    def scrape_all_months(self, cpf: str, start_month: int = 1, end_month: int = 12, year: int = 2026) -> List[Dict]:
+    def scrape_all_months(self, cpf: str, senha: str, start_month: int = 1, end_month: int = 12, year: int = 2026) -> List[Dict]:
         """
         Scraping de todos os meses de um ano
         
         Args:
             cpf: CPF do usuário
+            senha: Senha do usuário
             start_month: Mês inicial
             end_month: Mês final
             year: Ano
@@ -171,7 +184,7 @@ class SefazMTScraper:
         """
         all_notas = []
         
-        if not self.login(cpf):
+        if not self.login(cpf, senha):
             return all_notas
             
         for month in range(start_month, end_month + 1):
@@ -196,12 +209,18 @@ def main():
     """Função principal para teste"""
     parser = argparse.ArgumentParser(description='Scraping de notas fiscais da SEFAZ-MT')
     parser.add_argument('--cpf', type=str, required=True, help='CPF do usuário (apenas números)')
+    parser.add_argument('--senha', type=str, required=False, help='Senha do usuário')
     parser.add_argument('--month', type=int, help='Mês específico (1-12)')
     parser.add_argument('--year', type=int, default=2026, help='Ano (padrão: 2026)')
     parser.add_argument('--headless', action='store_true', help='Executar em modo headless')
     parser.add_argument('--output', type=str, default='notas_fiscais.json', help='Arquivo de saída JSON')
     
     args = parser.parse_args()
+
+    senha = args.senha or os.getenv('SEFAZ_MT_SENHA') or os.getenv('SEFAZ_SENHA')
+    if not senha:
+        print(json.dumps({"error": "Senha não informada"}), file=sys.stderr)
+        sys.exit(1)
     
     scraper = SefazMTScraper(headless=args.headless)
     
@@ -211,14 +230,14 @@ def main():
         # Scraping de um mês específico ou todos os meses
         if args.month:
             print(f"Scraping mês {args.month}/{args.year}...")
-            if scraper.login(args.cpf):
+            if scraper.login(args.cpf, senha):
                 if scraper.navigate_to_month(args.month, args.year):
                     notas = scraper.extract_notas()
                     scraper.save_to_json(notas, args.output)
                     print(json.dumps(notas, ensure_ascii=False, indent=2))
         else:
             print(f"Scraping todos os meses de {args.year}...")
-            notas = scraper.scrape_all_months(args.cpf, start_month=1, end_month=12, year=args.year)
+            notas = scraper.scrape_all_months(args.cpf, senha, start_month=1, end_month=12, year=args.year)
             scraper.save_to_json(notas, args.output)
             print(json.dumps(notas, ensure_ascii=False, indent=2))
         

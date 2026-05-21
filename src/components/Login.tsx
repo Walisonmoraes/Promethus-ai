@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { BRAND_LOGO_SRC, BRAND_NAME } from "@/lib/brand";
 
 interface LoginFormData {
   email: string;
@@ -73,10 +74,7 @@ export default function Login() {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <div className="login-logo">
-            <img src="/logo.png" alt="Prometheus AI Logo" className="logo-image" />
-          </div>
-          <h1 className="login-title">Prometheus AI</h1>
+          <img src={BRAND_LOGO_SRC} alt={BRAND_NAME} className="login-logo-full" />
           <p className="login-subtitle">Seu copiloto financeiro inteligente</p>
         </div>
 
@@ -233,43 +231,14 @@ export default function Login() {
           margin-bottom: 32px;
         }
 
-        .login-logo {
-          width: 80px;
-          height: 80px;
-          margin: 0 auto 16px;
-          background: linear-gradient(
-            135deg,
-            rgba(124, 92, 255, 0.2) 0%,
-            rgba(57, 208, 255, 0.1) 100%
-          );
-          border: 1px solid rgba(124, 92, 255, 0.3);
-          border-radius: 16px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 8px;
-        }
-
-        .logo-image {
-          width: 100%;
-          height: 100%;
+        .login-logo-full {
+          display: block;
+          width: auto;
+          max-width: min(380px, 92vw);
+          height: auto;
+          max-height: 96px;
+          margin: 0 auto 20px;
           object-fit: contain;
-          border-radius: 8px;
-        }
-
-        .login-title {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: #ffffff;
-          margin: 0 0 8px 0;
-          background: linear-gradient(
-            135deg,
-            rgba(124, 92, 255, 0.9) 0%,
-            rgba(57, 208, 255, 0.8) 100%
-          );
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
         }
 
         .login-subtitle {

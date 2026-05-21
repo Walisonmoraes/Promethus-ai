@@ -115,6 +115,60 @@ export interface Database {
           updated_at?: string
         }
       }
+      sefaz_connections: {
+        Row: {
+          id: string
+          user_id: string
+          cpf_last4: string | null
+          storage_state_encrypted: string
+          created_at: string
+          updated_at: string
+          last_validated_at: string | null
+          status: 'connected' | 'invalid'
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          cpf_last4?: string | null
+          storage_state_encrypted: string
+          created_at?: string
+          updated_at?: string
+          last_validated_at?: string | null
+          status?: 'connected' | 'invalid'
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          cpf_last4?: string | null
+          storage_state_encrypted?: string
+          updated_at?: string
+          last_validated_at?: string | null
+          status?: 'connected' | 'invalid'
+        }
+      }
+      whatsapp_user_mappings: {
+        Row: {
+          id: string
+          user_id: string
+          phone: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          phone: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          phone?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }

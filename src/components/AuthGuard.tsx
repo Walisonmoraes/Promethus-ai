@@ -15,9 +15,9 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Se já está na página de login, não precisa verificar
-    if (pathname === "/login") {
-      console.log("AuthGuard: Página de login detectada, permitindo acesso");
+    // Se já está em uma rota pública, não precisa verificar
+    if (pathname === "/" || pathname === "/login") {
+      console.log("AuthGuard: Rota pública detectada, permitindo acesso");
       setIsLoading(false);
       return;
     }
@@ -43,8 +43,8 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     setIsLoading(false);
   }, [pathname, session, status, router]);
 
-  // Se está na página de login, renderizar normalmente
-  if (pathname === "/login") {
+  // Se está em uma rota pública, renderizar normalmente
+  if (pathname === "/" || pathname === "/login") {
     return <>{children}</>;
   }
 

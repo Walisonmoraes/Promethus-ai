@@ -22,4 +22,4 @@ app = 'prometheus-ai'
 
 [vm]
   cpu = "shared"
-  memory = "512mb"
+  memory = "1024mb"

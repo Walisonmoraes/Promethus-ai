@@ -2,17 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
+import { createTransaction } from '@/lib/transactionService'
 
 export async function GET(request: NextRequest) {
-  // Skip static generation
   if (process.env.NODE_ENV === 'development' || request.headers.get('x-middleware-skip') || !supabaseAdmin) {
     return NextResponse.json({ transactions: [] })
   }
 
   try {
     const session = await getServerSession(authOptions)
-    
-    // Se não houver sessão, retorna transações vazias (para não bloquear o frontend)
+
     if (!session?.user?.email) {
       return NextResponse.json({ transactions: [] })
     }
@@ -44,9 +43,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user?.email) {
-      console.error('No session or email found')
       return NextResponse.json({ error: 'Unauthorized - No session' }, { status: 401 })
     }
 
@@ -54,7 +52,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { amount, category, description, kind, date } = body
 
-    // Validação dos campos
     if (!amount || !category || !description || !kind) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
@@ -63,37 +60,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid transaction type' }, { status: 400 })
     }
 
-    console.log('Creating transaction for user:', userId)
-    console.log('Transaction data:', { amount, category, description, kind, date })
-
-    const transactionData = {
-      user_id: userId,
+    const result = await createTransaction({
+      userId,
       amount: parseFloat(amount),
-      category: category.trim(),
-      description: description.trim(),
+      category,
+      description,
       kind,
-      date: date || new Date().toISOString().split('T')[0]
+      date
+    })
+
+    if ('error' in result) {
+      return NextResponse.json({ error: 'Failed to create transaction', details: result.error }, { status: result.status })
     }
 
-    if (!supabaseAdmin) {
-      console.error('Supabase admin client not initialized')
-      return NextResponse.json({ error: 'Database not configured' }, { status: 500 })
-    }
-
-    const { data: transaction, error } = await supabaseAdmin
-      .from('transactions')
-      .insert(transactionData)
-      .select()
-      .single()
-
-    if (error) {
-      console.error('Error creating transaction:', error)
-      console.error('Error details:', JSON.stringify(error, null, 2))
-      return NextResponse.json({ error: 'Failed to create transaction', details: error.message }, { status: 500 })
-    }
-
-    console.log('Transaction created successfully:', transaction)
-    return NextResponse.json({ transaction }, { status: 201 })
+    return NextResponse.json({ transaction: result.transaction }, { status: 201 })
   } catch (error) {
     console.error('Server error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -103,9 +83,8 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user?.email) {
-      console.error('No session or email found')
       return NextResponse.json({ error: 'Unauthorized - No session' }, { status: 401 })
     }
 
@@ -117,10 +96,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Missing transaction id' }, { status: 400 })
     }
 
-    console.log('Deleting transaction for user:', userId, 'transactionId:', transactionId)
-
     if (!supabaseAdmin) {
-      console.error('Supabase admin client not initialized')
       return NextResponse.json({ error: 'Database not configured' }, { status: 500 })
     }
 
@@ -131,13 +107,64 @@ export async function DELETE(request: NextRequest) {
       .eq('user_id', userId)
 
     if (error) {
-      console.error('Error deleting transaction:', error)
-      console.error('Error details:', JSON.stringify(error, null, 2))
       return NextResponse.json({ error: 'Failed to delete transaction', details: error.message }, { status: 500 })
     }
 
-    console.log('Transaction deleted successfully')
     return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Server error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized - No session' }, { status: 401 })
+    }
+
+    const userId = session.user.email
+    const body = await request.json()
+    const { id, amount, category, description, kind, date } = body
+
+    if (!id) {
+      return NextResponse.json({ error: 'Missing transaction id' }, { status: 400 })
+    }
+
+    if (kind && !['expense', 'income'].includes(kind)) {
+      return NextResponse.json({ error: 'Invalid transaction type' }, { status: 400 })
+    }
+
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 500 })
+    }
+
+    const updateData: Record<string, unknown> = {}
+    if (amount !== undefined) updateData.amount = Number(amount)
+    if (category !== undefined) updateData.category = String(category).trim()
+    if (description !== undefined) updateData.description = String(description).trim()
+    if (kind !== undefined) updateData.kind = kind
+    if (date !== undefined) updateData.date = String(date)
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
+    }
+
+    const { data: transaction, error } = await supabaseAdmin
+      .from('transactions')
+      .update(updateData)
+      .eq('id', id)
+      .eq('user_id', userId)
+      .select()
+      .single()
+
+    if (error) {
+      return NextResponse.json({ error: 'Failed to update transaction', details: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ transaction })
   } catch (error) {
     console.error('Server error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

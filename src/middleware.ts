@@ -4,6 +4,7 @@ import { getToken } from "next-auth/jwt";
 
 // Rotas públicas que não precisam de autenticação
 const publicRoutes = [
+  "/",
   "/login", 
   "/api/auth/login", 
   "/api/auth/callback/google", 
@@ -19,7 +20,12 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Se for rota pública, permitir acesso
-  if (publicRoutes.some(route => pathname.startsWith(route))) {
+  if (
+    pathname === "/" ||
+    publicRoutes
+      .filter((route) => route !== "/")
+      .some(route => pathname.startsWith(route))
+  ) {
     return NextResponse.next();
   }
 

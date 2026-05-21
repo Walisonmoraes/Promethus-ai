@@ -5,35 +5,37 @@
  * Suporta formatos: R$ 10,99, 10.99, 10,99, 10.99 reais, etc.
  */
 export function extractAmount(text: string): number | null {
-  // Remove espaços extras
   const cleanText = text.trim().toLowerCase();
-  
-  // Padrões regex para diferentes formatos de valor
-  const patterns = [
-    // R$ 10,99 ou R$10.99
-    /r\$\s*([\d.,]+)/,
-    // 10,99 ou 10.99
-    /(\d+[.,]\d{2})/,
-    // 10 (valor inteiro)
-    /(\d+)/
-  ];
-  
-  for (const pattern of patterns) {
-    const match = cleanText.match(pattern);
-    if (match) {
-      let valueStr = match[1];
-      
-      // Normaliza separadores: troca ponto por nada, vírgula por ponto
-      valueStr = valueStr.replace(/\./g, '').replace(',', '.');
-      
-      const value = parseFloat(valueStr);
-      if (!isNaN(value) && value > 0) {
-        return value;
-      }
-    }
+
+  const naturalMatch = cleanText.match(/(\d+(?:[\.,]\d+)?)\s*(milh(?:a|ã)o|milhoes|milhões|mil)\b/);
+  if (naturalMatch) {
+    const base = parseFloat(naturalMatch[1].replace(".", "").replace(",", "."));
+    if (isNaN(base) || base <= 0) return null;
+    return naturalMatch[2].startsWith("milh") ? base * 1000000 : base * 1000;
   }
-  
-  return null;
+
+  const match = cleanText.match(/r\$\s*(\d+(?:\.\d{3})*(?:,\d+)?|\d+(?:,\d{3})*(?:\.\d+)?)|(\d+(?:\.\d{3})*(?:,\d+)?|\d+(?:,\d{3})*(?:\.\d+)?)/);
+  const valueStr = match?.[1] || match?.[2];
+  if (!valueStr) {
+    return null;
+  }
+
+  const hasComma = valueStr.includes(",");
+  const hasDot = valueStr.includes(".");
+
+  let normalized = valueStr;
+  if (hasComma && hasDot) {
+    normalized = valueStr.replace(/\./g, "").replace(",", ".");
+  } else if (hasDot && /^\d{1,3}(\.\d{3})+$/.test(valueStr)) {
+    normalized = valueStr.replace(/\./g, "");
+  } else if (hasComma && /^\d{1,3}(,\d{3})+$/.test(valueStr)) {
+    normalized = valueStr.replace(/,/g, "");
+  } else if (hasComma) {
+    normalized = valueStr.replace(",", ".");
+  }
+
+  const value = parseFloat(normalized);
+  return !isNaN(value) && value > 0 ? value : null;
 }
 
 /**
