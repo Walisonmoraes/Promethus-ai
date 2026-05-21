@@ -36,6 +36,13 @@ yarn-error.log*
 # vercel
 .vercel
 
+# fly.io cli (local)
+.fly/
+
+# whatsapp-web.js (sessão e cache local — nunca commitar)
+.wwebjs_auth/
+.wwebjs_cache/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
